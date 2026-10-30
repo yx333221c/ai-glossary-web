@@ -1,0 +1,17 @@
+{
+  "name": "ai-glossary-web",
+  "version": "2.0.0",
+  "private": true,
+  "description": "AI 术语词典：纯静态、零依赖的中英对照术语查询网页，支持中文/英文/拼音/首字母检索与相关度排序",
+  "scripts": {
+    "test": "node tests/run.js && node tests/pages.js && node tests/browser.js && node tests/responsive.js",
+    "test:logic": "node tests/run.js",
+    "test:pages": "node tests/pages.js",
+    "test:browser": "node tests/browser.js",
+    "test:responsive": "node tests/responsive.js",
+    "links": "node tools/check-links.js",
+    "start": "node tools/serve.js 8137"
+  },
+  "keywords": ["ai", "glossary", "terminology", "static-site", "search"],
+  "license": "MIT"
+}

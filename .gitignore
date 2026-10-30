@@ -19,3 +19,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# 测试过程产生的临时文件
+tests/.inline-*
+*.tmp.html

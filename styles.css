@@ -1,0 +1,232 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.search-section {
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+    margin-bottom: 2rem;
+}
+
+.search-box {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    outline: none;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.search-icon {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    pointer-events: none;
+}
+
+.results-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+    display: none;
+}
+
+.results-container.active {
+    display: block;
+}
+
+.result-item {
+    background: white;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.result-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.result-score {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+}
+
+.glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.term-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.term-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.term-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.term-en {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.term-zh {
+    font-size: 1.2rem;
+    color: #333;
+    margin-left: 0.5rem;
+}
+
+.term-category {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.term-definition {
+    color: #555;
+    line-height: 1.7;
+    margin-top: 1rem;
+}
+
+.related-terms {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.related-terms strong {
+    color: #667eea;
+}
+
+footer {
+    text-align: center;
+    color: white;
+    margin-top: 3rem;
+    padding: 2rem;
+    opacity: 0.9;
+}
+
+/* Category colors */
+.category-math { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.category-ml { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.category-dl { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.category-nlp { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.category-model { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+.category-process { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .glossary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .term-en {
+        font-size: 1.2rem;
+    }
+
+    .term-zh {
+        font-size: 1rem;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #764ba2;
+}

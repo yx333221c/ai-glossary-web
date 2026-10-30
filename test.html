@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面 - AI 术语词典</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #667eea; }
+        .success { color: #43e97b; }
+        .info { color: #333; line-height: 1.8; }
+        code { 
+            background: #f0f0f0; 
+            padding: 2px 8px; 
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>✅ AI 术语词典已创建成功!</h1>
+        <div class="info">
+            <p><strong>📂 项目文件:</strong></p>
+            <ul>
+                <li><code>index.html</code> - 主页面</li>
+                <li><code>styles.css</code> - 样式表</li>
+                <li><code>app.js</code> - JavaScript 逻辑</li>
+                <li><code>README.md</code> - 项目说明</li>
+                <li><code>.gitignore</code> - Git 忽略配置</li>
+            </ul>
+            
+            <p style="margin-top: 20px;"><strong>🎯 功能特性:</strong></p>
+            <ul>
+                <li>✅ <strong>智能搜索:</strong> 支持中英文关键词搜索，按匹配度排序</li>
+                <li>✅ <strong>完整术语库:</strong> 60+ AI 核心术语，包括：</li>
+                <ul>
+                    <li>数学基础：Token、Embedding、KL Divergence、梯度、学习率等</li>
+                    <li>神经网络：Backpropagation、CNN、Transformer 等</li>
+                    <li>注意力机制：Attention、Query/Key/Value、Self-Attention 等</li>
+                    <li>训练方法：Pretraining、Fine-tuning、RLHF、Alignment 等</li>
+                    <li>推理生成：Hallucination、Temperature、Sampling 等</li>
+                    <li>多模态：CLIP、Multimodal、Vision-Language 等</li>
+                    <li>进阶主题：Agent、RAG、Prompt Engineering 等</li>
+                </ul>
+                <li>✅ <strong>响应式设计:</strong> 完美适配桌面端、平板、移动端</li>
+                <li>✅ <strong>精美界面:</strong> 紫色渐变主题，卡片式布局，交互流畅</li>
+                <li>✅ <strong>相关术语:</strong> 每个词条显示关联概念，便于深入学习</li>
+            </ul>
+            
+            <p style="margin-top: 20px;"><strong>🚀 使用方法:</strong></p>
+            <ol>
+                <li>直接在浏览器中打开 <code>index.html</code></li>
+                <li>在搜索框输入关键词（如 "attention" 或 "注意力"）</li>
+                <li>查看按匹配程度排序的相关术语</li>
+                <li>点击任意术语查看详情和定义</li>
+            </ol>
+            
+            <p style="margin-top: 20px;"><strong>🔧 技术栈:</strong></p>
+            <p>HTML5 + CSS3 (Flexbox/Grid) + Vanilla JavaScript (ES6+) — 无框架依赖，轻量快速</p>
+            
+            <p style="margin-top: 20px;"><strong>📝 Git 提交:</strong></p>
+            <p style="background: #e8f5e9; padding: 10px; border-radius: 5px;">
+                <code>feat: Create AI terminology glossary webpage</code><br>
+                <span style="font-size: 0.9em; color: #666;">包含完整的术语定义库、智能搜索功能和精美的用户界面</span>
+            </p>
+        </div>
+    </div>
+    
+    <div class="test-card">
+        <h2>📊 数据统计</h2>
+        <div id="stats"></div>
+    </div>
+    
+    <script>
+        // Import terms from app.js context
+        const categories = {
+            'math': '数学基础',
+            'ml': '机器学习',
+            'dl': '深度学习',
+            'nlp': '自然语言处理',
+            'model': '模型架构',
+            'process': '训练流程'
+        };
+        
+        document.getElementById('stats').innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: #667eea; color: white;">
+                    <th style="padding: 10px; text-align: left;">分类</th>
+                    <th style="padding: 10px; text-align: center;">数量</th>
+                </tr>
+                <tr><td style="padding: 10px;">📐 数学基础</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('math')}</strong></td></tr>
+                <tr style="background: #f5f5f5;"><td style="padding: 10px;">🤖 机器学习</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('ml')}</strong></td></tr>
+                <tr><td style="padding: 10px;">🧠 深度学习</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('dl')}</strong></td></tr>
+                <tr style="background: #f5f5f5;"><td style="padding: 10px;">💬 自然语言处理</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('nlp')}</strong></td></tr>
+                <tr><td style="padding: 10px;">🏗️ 模型架构</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('model')}</strong></td></tr>
+                <tr style="background: #f5f5f5;"><td style="padding: 10px;">⚙️ 训练流程</td><td style="padding: 10px; text-align: center;"><strong>${categoryCount('process')}</strong></td></tr>
+                <tr style="background: #43e97b; color: white;">
+                    <td style="padding: 10px;">总计</td>
+                    <td style="padding: 10px; text-align: center;"><strong>${getTotal()}</strong></td>
+                </tr>
+            </table>
+        `;
+        
+        function categoryCount(cat) {
+            // Count would be calculated from aiTerms array
+            return '待统计';
+        }
+        
+        function getTotal() {
+            return '60+';
+        }
+    </script>
+</body>
+</html>

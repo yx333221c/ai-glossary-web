@@ -1,172 +1,140 @@
-# AI 术语词典 | AI Glossary Webpage
+# AI 术语词典
 
-一个精美的 AI 术语查询网页，涵盖机器学习、深度学习、自然语言处理等核心概念。
+人工智能领域术语的中英对照查询网页。**纯静态、零依赖、无构建步骤**——双击 `index.html` 就能用，也可以部署到任意静态托管。
 
-## 📚 功能特性
+收录 **195 条**术语，每条给出统一中文译名、英文原词、别名、一句话释义、机制说明、常见误译与相关术语。
 
-- **完整的术语库**: 包含 60+ 个 AI 领域核心术语
-- **智能搜索**: 支持中英文搜索，按关联程度自动排序
-- **精美界面**: 渐变色设计，响应式布局，卡片式展示
-- **分类清晰**: 按数学基础、机器学习、深度学习、模型架构等分类
-- **相关术语**: 每个词条显示相关链接，方便深入理解
+## 页面
 
-## 🎯 术语覆盖范围
+| 文件 | 作用 |
+|---|---|
+| `index.html` | 浏览：按分类分组列出全部条目，可切列表/卡片视图、按拼音首字母过滤、随机跳转 |
+| `search.html` | 搜索：输入关键词按**关联程度**排序，显示相关度条与命中原因，可回车进详情 |
+| `term.html?id=xxx` | 详情：一句话释义 + 展开说明 + 用法提醒 + 相关术语 + 上一条/下一条 |
+| `about.html` | 关于：数据字段说明、完整译名对照表、排序权重表、已知局限 |
 
-### 基础概念
-- Artificial Intelligence (人工智能)
-- Machine Learning (机器学习)
-- Deep Learning (深度学习)
-- Neural Network (神经网络)
+## 怎么用
 
-### 数学基础
-- Token (词元)
-- Embedding (嵌入)
-- Surprise / Self-information (惊讶度)
-- KL Divergence (KL 散度)
-- Parameter & Weight (参数与权重)
-- Loss / Cost Function (损失函数)
-- Cross-Entropy (交叉熵)
-- Perplexity (困惑度)
-- Gradient (梯度)
-- Learning Rate (学习率)
-- Activation Function (激活函数)
-
-### 神经网络架构
-- Backpropagation (反向传播)
-- CNN (卷积神经网络)
-- Receptive Field (感受野)
-- Residual Connection (残差连接)
-- BatchNorm / LayerNorm (批归一化/层归一化)
-
-### 注意力与 Transformer
-- Attention (注意力机制)
-- Query / Key / Value (查询/键/值)
-- Self-Attention (自注意力)
-- Multi-Head Attention (多头注意力)
-- Transformer
-- Positional Encoding (位置编码)
-- RoPE (旋转位置编码)
-- Feed-Forward Network (前馈网络)
-
-### 训练方法
-- Pretraining (预训练)
-- Fine-Tuning (微调)
-- Scaling Law (规模定律)
-- Emergent Ability (涌现能力)
-- Alignment (对齐)
-- RLHF (基于人类反馈的强化学习)
-
-### 推理与生成
-- Inference (推理)
-- Hallucination (幻觉)
-- Temperature (温度)
-- Logit (未归一化得分)
-- Sampling (采样)
-- Top-p / Nucleus (核采样)
-- Context Window (上下文窗口)
-- KV Cache (键值缓存)
-- Prompt Engineering (提示工程)
-- Chain-of-Thought (思维链)
-
-### 评估与基准
-- Benchmark (基准测试)
-- Zero-shot Classification (零样本分类)
-
-### 多模态
-- Multimodal (多模态)
-- CLIP (图文对比模型)
-- Patch (图像块)
-- InfoNCE
-- Vector Quantization (向量量化)
-
-### 进阶主题
-- Agent (智能体)
-- Tool Use / Function Calling (工具调用)
-- RAG (检索增强生成)
-- Jailbreak (越狱)
-- Prompt Injection (提示注入)
-- Red Teaming (红队测试)
-
-## 🚀 快速开始
-
-### 本地运行
 ```bash
-# 方式 1：直接在浏览器打开
-双击 index.html 文件
+# 方式一：直接打开（file:// 完全可用，脚本都是普通 <script>，没有 ES module 与 fetch）
+双击 index.html
 
-# 方式 2：使用本地服务器（推荐）
-python -m http.server 8000
-# 访问 http://localhost:8000
+# 方式二：本地服务器
+node tools/serve.js 8137      # 然后访问 http://127.0.0.1:8137
 ```
 
-### 部署到 GitHub Pages
-```bash
-# 1. 创建新的 GitHub 仓库
-git remote add origin https://github.com/YOUR_USERNAME/ai-glossary-web.git
-git branch -M main
+搜索支持四种输入，任选：
 
-# 2. 推送到 GitHub
-git push -u origin main
+| 输入 | 例 | 命中 |
+|---|---|---|
+| 中文名 | `键值缓存` | KV cache |
+| 英文名 | `embedding` | 嵌入 |
+| 拼音全拼 | `jianzhihuancun` | 键值缓存 |
+| 拼音首字母 | `jzhc` | 键值缓存 |
+| 释义内文 | `多付` | KL 散度 |
 
-# 3. 启用 GitHub Pages
-# Settings → Pages → Source → main branch → Save
+快捷键：`/` 聚焦搜索框、输入即出结果、`↑` `↓` 在结果间移动、`Esc` 清空。
+
+## 排序是怎么算的
+
+`assets/engine.js` 是唯一逻辑内核，对每条术语的多个字段分别打分：
+
+- **命中层级优先**：名称完全等于查询词 > 名称前缀 > 名称子串 > 只在释义/标签/分类里撞到。层级不同就先比层级，避免「名字里带这个词」的条目压过「就叫这个名字」的条目。
+- **多字段加权**：英文名、中文名、别名 `aka`、拼音全拼、拼音首字母、`id`、释义、长文、标签、分类、难度名、关联术语名，各自有独立权重（见 `about.html` 的权重表，数值实时从引擎读取）。
+- **多词查询是 AND 语义**：每有一个主查询词完全没命中，总分乘一次惩罚系数 `missFactor`，所以「注意力 机制」比只命中一个词的条目排得高。
+- **中文二字滑窗只加分不惩罚**：让「注意力机制」也能被「注意」召回，但不会因为拆词而误伤。
+- **正文命中封顶**：`defCap` / `longCap` / `relCap` 防止长文本靠出现次数刷分。
+- **相关度百分比是相对值**：把最高分归一为 100，只表示「与第一名相比有多相关」。
+
+想调排序倾向，改 `engine.js` 里的 `W` 权重表即可，页面与 `about.html` 会同步反映。
+
+## 目录结构
+
+```
+ai-glossary-web/
+├── index.html  search.html  term.html  about.html
+├── assets/
+│   ├── engine.js       检索内核（打分、拼音音节切分、分类元数据）
+│   ├── ui.js           顶栏、主题、卡片渲染等共享 UI
+│   ├── site.css        全站样式（含深色主题与响应式）
+│   ├── browse.js       浏览页逻辑
+│   ├── search-page.js  搜索页逻辑
+│   └── term-page.js    详情页逻辑
+├── data/               术语数据，按分片加载（顺序即 id 冲突时的优先级）
+│   ├── data-core.js    55 条：参考术语表的译名与释义 + 补充
+│   ├── data-llm.js     语言模型 / NLP / 解码
+│   ├── data-systems.js 经典机器学习 / 视觉 / 训练与部署系统
+│   ├── data-extra.js   补齐被引用概念（Transformer、过拟合等）
+│   └── data-agents.js  智能体 / 多模态 / 前沿争议 / 推理工程
+├── tests/              4 个测试套件（见下）
+├── tools/              维护脚本（链接检查、去重、改名、本地服务器）
+└── package.json        仅用于 `npm test` / `npm start`，无第三方依赖
 ```
 
-## 📖 使用方法
+## 数据格式
 
-1. **打开页面**：直接双击 `index.html` 或在浏览器中打开
-2. **搜索术语**：在顶部搜索框输入关键词（支持中文或英文）
-   - 示例："attention"、"注意力"、"embedding"、"微调"
-3. **查看结果**：搜索结果按匹配度自动排序，百分比越高越相关
-4. **查看详情**：点击任意术语卡片查看详细定义和相关术语
+一个条目长这样，往任一 `data/*.js` 的 `T.push(...)` 里加即可：
 
-## 🔍 搜索技巧
-
-- **精确匹配**: 输入完整术语名称获得最准确结果（如 "Chain-of-Thought"）
-- **部分匹配**: 输入关键词的一部分也能找到相关术语
-- **中英文混搜**: 同时支持中文和英文关键词
-- **定义搜索**: 搜索定义描述中的关键词也能找到对应术语
-
-## 🛠️ 技术栈
-
-- HTML5
-- CSS3 (Flexbox/Grid, CSS Variables, Animations)
-- Vanilla JavaScript (ES6+)
-
-## 📱 响应式设计
-
-页面采用响应式布局，完美适配：
-- 桌面端 (双列/三列布局)
-- 平板 (单列/双列自适应)
-- 移动端 (单列布局)
-
-## 🔧 自定义
-
-### 添加新术语
-在 `app.js` 的 `aiTerms` 数组中添加：
-```javascript
+```js
 {
-    en: "English Term",
-    zh: "中文翻译",
-    category: "ml", // math, ml, dl, nlp, model, process
-    definition: "定义描述",
-    related: ["相关术语 1", "相关术语 2"]
+  id: "kv-cache",                 // 全小写短横线，全局唯一
+  en: "KV cache",                 // 英文原词
+  zh: "键值缓存",                  // 统一中文译名
+  aka: ["KV Cache", "键值对缓存"], // 别名/缩写
+  pinyin: "jian zhi huan cun",    // 中文全拼，按音节空格分隔（推荐）
+  cat: "inference",               // 见下方分类
+  level: "core",                  // basic | core | advanced
+  def: "复用历史词元的键与值以避免重复计算。",
+  long: "补充说明：机制、边界、常见误解。",
+  avoid: ["把它当作「模型的记忆」"], // 不采用的写法 / 常见误解
+  related: ["qkv", "context-window"], // 只填存在的 id
+  tags: ["优化", "显存"]
 }
 ```
 
-### 修改样式
-编辑 `styles.css` 文件中的各个组件样式。
+`pinyin` 也可以连写（`jianzhihuancun`），引擎会自己切音节；`pyFull` 与首字母 `py1` 由引擎在索引时派生，**不要手写 `py1`**。
 
-### 调整配色
-在 `styles.css` 中修改以下渐变色：
-- 背景渐变
-- 分类标签颜色
-- 按钮和交互元素颜色
+分类取值：`math` `ml` `dl` `nlp` `training` `inference` `multimodal` `agent` `safety` `infra` `frontier`。
 
-## 📄 License
+## 测试
 
-MIT License - 可自由用于学习和项目
+```bash
+npm test              # 跑全部（后两项需要本机装有 Chrome 或 Edge）
+npm run test:logic    # 65 项：数据完整性、译名一致性、检索排序、拼音自洽
+npm run test:pages    # 39 项：页面脚本装配、内联脚本语法、引用无悬空
+npm run test:browser  # 41 项：无头 Chrome 实渲染，检查控制台错误与关键内容
+npm run test:responsive # 88 项：CDP 强制 1400/1024/820/560/390px 视口，检查横向溢出
+npm run links         # 列出 related 里指向不存在 id 的引用
+```
 
----
+无浏览器环境下 `test:browser` 与 `test:responsive` 会自动跳过并返回 0，逻辑层测试仍会执行。
 
-Created for AI learning and knowledge sharing.
+> `--window-size` 在 headless Chrome 下会被夹到固定尺寸，截出来的「移动端」其实还是桌面宽度。
+> 所以响应式测试走 DevTools Protocol 的 `Emulation.setDeviceMetricsOverride`，
+> 并且直接测量 `documentElement.scrollWidth` 与元素边界，而不是靠肉眼看截图。
+
+## 加一条术语的流程
+
+1. 找合适的分片，往 `T.push(...)` 里加条目（新主题可另建 `data-xxx.js`，并在四个页面的 `<script>` 列表里加一行）。
+2. `related` 只填已经存在的 `id`。
+3. `npm run links && npm test`。
+4. 若新增了分类，记得同步 `engine.js` 的 `CATEGORIES`。
+
+## 数据来源与边界
+
+- 核心 **55 条**的译名与释义参考自另一项目 `ai-principles-web` 的术语表（`docs/glossary.md`）。该项目对本仓库**只作参考，不运行、不修改**；本仓库是独立实现。
+- 其余条目为补充，全部释义是为本站重写的，力求准确并刻意标注边界与反面提醒，但**不能替代论文与教材**——它是查「这个词该译成什么、大致指什么」的对照工具，不是可引用的定义出处。
+- 存在争议的概念（涌现能力、对齐、pre-LN / post-LN 孰优）已归入 `frontier` 分类并在条目内标明争议，请把它当作「此处尚无共识」的信号，而不是结论。
+- 不给具体论文页码或引文编号：条目多、更新快，写了反而容易过期或写错。
+
+## 已知局限
+
+- 拼音只覆盖中文名字段，释义里的中文没有拼音化；首字母有天然碰撞（`cy` 同时是「采样」与「词元」）。
+- 纯线性扫描打分，没有倒排索引；当前条目量下是毫秒级，上千条以后需要换实现。
+- 拼写容错只兜一次编辑距离，且要求查询词不短于 4 个字符。
+- 无中文分词与英文词形还原，复数与动词化形式只靠子串联系。
+- 覆盖面偏语言模型周边，语音、强化学习、传统 ML 只点到为止。
+
+## License
+
+MIT

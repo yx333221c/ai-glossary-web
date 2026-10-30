@@ -87,12 +87,45 @@
 - Prompt Injection (提示注入)
 - Red Teaming (红队测试)
 
-## 🚀 使用方法
+## 🚀 快速开始
 
-1. 直接打开 `index.html` 文件即可在浏览器中查看
-2. 在搜索框输入关键词（中文或英文）
-3. 搜索结果会按匹配程度排序显示
-4. 点击任意术语卡片可查看详细信息
+### 本地运行
+```bash
+# 方式 1：直接在浏览器打开
+双击 index.html 文件
+
+# 方式 2：使用本地服务器（推荐）
+python -m http.server 8000
+# 访问 http://localhost:8000
+```
+
+### 部署到 GitHub Pages
+```bash
+# 1. 创建新的 GitHub 仓库
+git remote add origin https://github.com/YOUR_USERNAME/ai-glossary-web.git
+git branch -M main
+
+# 2. 推送到 GitHub
+git push -u origin main
+
+# 3. 启用 GitHub Pages
+# Settings → Pages → Source → main branch → Save
+```
+
+## 📖 使用方法
+
+1. **打开页面**：直接双击 `index.html` 或在浏览器中打开
+2. **搜索术语**：在顶部搜索框输入关键词（支持中文或英文）
+   - 示例："attention"、"注意力"、"embedding"、"微调"
+3. **查看结果**：搜索结果按匹配度自动排序，百分比越高越相关
+4. **查看详情**：点击任意术语卡片查看详细定义和相关术语
+
+## 🔍 搜索技巧
+
+- **精确匹配**: 输入完整术语名称获得最准确结果（如 "Chain-of-Thought"）
+- **部分匹配**: 输入关键词的一部分也能找到相关术语
+- **中英文混搜**: 同时支持中文和英文关键词
+- **定义搜索**: 搜索定义描述中的关键词也能找到对应术语
 
 ## 🛠️ 技术栈
 

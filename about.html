@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关于 · 译名规范 · AI 术语词典</title>
+<meta name="description" content="AI 术语词典的译名规范与使用说明：统一译名对照表、禁用译名、缩写展开规则、数据字段含义、检索排序权重、键盘快捷键、数据来源与已知局限。">
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.setAttribute('data-theme', (function(){try{var t=localStorage.getItem('ai-glossary-theme');if(t==='light'||t==='dark')return t;}catch(e){}return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<header class="chrome" id="chrome" data-page="about"></header>
+
+<main class="wrap" id="main">
+
+  <div class="hero">
+    <h1>关于本站与译名规范</h1>
+    <p class="lead">
+      这一页说明三件事：本站能查到什么、为什么这样译、检索为什么会把某条排在前面。
+      重点是<strong>统一译名</strong>——同一概念在中英文技术写作里往往有两三种流通写法，
+      本站只选一种，并把不采用的写法明说出来，方便你遇到时改掉而不是继续混用。
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="index.html">浏览全部术语 →</a>
+      <a class="btn" href="search.html">进入搜索页</a>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------ 1 -->
+  <section class="section">
+    <div class="section-hd"><h2>这个站是什么</h2><span class="hint">纯静态，无构建，无网络请求</span></div>
+    <p>
+      一本 <strong>AI 术语中英对照词典</strong>，形态是几个 HTML 文件加两个 JS 文件加一份数据。
+      没有框架、没有打包、没有后端、不读任何 CDN，整个目录拷进 U 盘也能用——
+      直接<strong>双击 <code>index.html</code></strong> 就能在 <code>file://</code> 下离线打开
+      （数据是以脚本形式随页面加载的，不是 fetch 回来的 JSON，所以不受浏览器本地跨域限制影响）。
+    </p>
+    <p>只有两个入口：</p>
+    <ul>
+      <li><a href="index.html">浏览</a>：按分类列出全部条目，可按分类、拼音首字母筛选，可切列表 / 卡片视图。</li>
+      <li><a href="search.html">搜索</a>：一个输入框，输入即时出结果，按关联程度排序，可显示命中原因。</li>
+    </ul>
+    <p>
+      每个条目都能点进 <code>term.html?id=…</code> 看详情：机制说明、不采用译名、相关术语。
+      顶栏的搜索框在任意页都可用——回车时它先看一眼结果：若只命中一条，或第一名分数达标而第二名明显落后，
+      就直接跳到那条详情页，否则把查询交给搜索页让你自己挑。
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------ 2 -->
+  <section class="section">
+    <div class="section-hd"><h2>能查到什么：数据字段</h2><span class="hint">一条术语 = 一个对象</span></div>
+    <p>
+      数据是一组扁平对象，字段不多但各有分工：<code>en</code> 与 <code>zh</code> 是名字，
+      <code>def</code> 与 <code>long</code> 是内容，<code>avoid</code>、<code>aka</code>、<code>related</code> 是关系，
+      <code>cat</code>、<code>level</code>、<code>tags</code> 是筛选维度，<code>pinyin</code>、<code>py1</code> 是为检索准备的辅助索引键。
+      下表最后一列写明该字段在打分时扮演的角色，方便你判断「为什么搜这个词能搜到它」。
+    </p>
+    <table class="gloss">
+      <thead><tr><th>字段</th><th>含义</th><th>在检索里的角色</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>稳定标识符，kebab-case，如 <code>kv-cache</code>、<code>kl-divergence</code>；详情页 URL 与 <code>related</code> 都靠它引用</td><td>完全等于查询词时给高分（<code>idExact</code>）；前缀 / 包含命中走通用分支，并被截到 <code>idHas</code> + 20 以内</td></tr>
+        <tr><td><code>en</code></td><td>英文原词，站内统一写法（含斜杠分隔的并列形式，如 <code>query / key / value</code>）</td><td>权重最高的字段之一：精确、前缀、词首、包含四种命中方式</td></tr>
+        <tr><td><code>zh</code></td><td><strong>本站统一中文译名</strong>，一个概念只此一个</td><td>与 <code>en</code> 同级：按去空格后的紧凑形式比较</td></tr>
+        <tr><td><code>aka</code></td><td>别名、常见缩写、同义写法数组，如 <code>["跳跃连接", "skip connection"]</code></td><td>独立加分项（精确 <code>akaExact</code> &gt; 前缀 &gt; 包含）</td></tr>
+        <tr><td><code>pinyin</code></td><td>中文名的拼音，按音节写（可空格分隔，也可连写），如 <code>jian zhi huan cun</code>。这一项是<strong>人工填写</strong>的</td><td>支持打 <code>qianru</code> 找到「嵌入」；引擎会切音节并据此推出全拼串 <code>pyFull</code></td></tr>
+        <tr><td><code>py1</code></td><td>拼音首字母串，如 <code>zyl</code>（注意力）、<code>jzhc</code>（键值缓存）；<strong>索引时由 <code>pinyin</code> 自动派生</strong>，数据里写了也会被覆盖</td><td>与全拼分开计分，两字母以上才参与匹配；派生依赖引擎内置的音节表，音节切不开时整段退化处理</td></tr>
+        <tr><td><code>cat</code></td><td>分类键，对应 <code>AI.CATEGORIES</code>（数学与信息论、神经网络与架构……）</td><td>分类名本身也可被搜到（权重很低）</td></tr>
+        <tr><td><code>level</code></td><td>难度：<code>basic</code> 入门 / <code>core</code> 核心 / <code>advanced</code> 进阶</td><td>主要用作筛选；<strong>分数相同时</strong>作为次级排序依据（进阶更靠前）</td></tr>
+        <tr><td><code>def</code></td><td>一句话释义</td><td>可被搜到（<code>defHas</code>），这是「搜释义词也能命中」的来源</td></tr>
+        <tr><td><code>long</code></td><td>机制说明与适用边界的长文</td><td>权重比 <code>def</code> 更低，只作兜底</td></tr>
+        <tr><td><code>avoid</code></td><td>不采用译名数组，即本页对照表「不采用」那一列</td><td>不参与检索打分，只在详情页提示</td></tr>
+        <tr><td><code>related</code></td><td>相关术语的 <code>id</code> 数组</td><td>间接命中：查询词命中了它指向的条目名时给少量加分（有上限）</td></tr>
+        <tr><td><code>tags</code></td><td>标签数组，如 <code>["信息论", "优化"]</code></td><td>弱匹配（<code>tagHas</code>），适合按主题粗筛</td></tr>
+        <tr><td><code>src</code></td><td>来源标记，<code>"glossary"</code> 表示该条译名取自参考术语表</td><td>不参与打分，只用于说明数据边界（见下文）</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ------------------------------------------------------------ 3 -->
+  <section class="section">
+    <div class="section-hd"><h2>译名规则</h2><span class="hint">写作时按这五条办</span></div>
+    <ol>
+      <li>
+        <strong>同一概念全站只用一个中文译名。</strong>
+        首次出现写「中文（English）」的形式，例如「键值缓存（KV cache）」；之后再提只用中文，不反复夹英文。
+        确实必须保留英文原词的，用 <code>&lt;abbr&gt;</code> 而不是把它塞进正文当译名。
+      </li>
+      <li>
+        <strong>「不采用译名」是已经流通但本站不采用的写法。</strong>
+        它们不是错字，而是会造成歧义或信息丢失的译法（「KL 距离」假装它对称，「代理」会和网络代理混，「步长」和 learning-rate schedule 里的 step 冲突）。
+        遇到请改成统一译名，需要时加一句说明，不要两个译名并列混用。
+      </li>
+      <li>
+        <strong>缩写首次出现必须展开。</strong>
+        RLHF、RAG、DPO、KV cache 这类缩写，第一次写出来时给全称：
+        「基于人类反馈的强化学习（RLHF）」；展开后<strong>同一段落</strong>内可以直接用缩写，
+        但<strong>跨模块 / 跨页要重新展开</strong>——读者未必按顺序读下来。
+      </li>
+      <li>
+        <strong>不自造缩写。</strong>
+        不许出现「注」「预注」这种只在本文档内部自洽的简称。社区已经通用的缩写（PPL、CoT）可以按第 3 条展开后使用。
+      </li>
+      <li>
+        <strong>有争议的概念并列标注英文原词，并明确写出争议点。</strong>
+        目前两个：「涌现能力（emergent ability）」——是否真的存在突变式的「涌现」，取决于你用什么度量，尚无定论；
+        「对齐（alignment）」——中文技术圈常与「一致性（consistency）」混用，本站 <code>alignment</code> 一律译「对齐」，
+        而「校准（calibration）」是另一个概念，指置信度是否与正确率相符，不要与对齐混。
+      </li>
+    </ol>
+
+    <div class="section-hd" id="mapHd"><h2>完整译名对照表</h2><span class="cnt" id="mapCnt">—</span></div>
+    <p>
+      「不采用」列用红色等宽字体标出，意思是<strong>看到就改</strong>，而不是「绝对没人这么写」。
+      空白处写「—」表示本站对该词没有禁用译名。
+    </p>
+    <table class="gloss" id="mapTable">
+      <thead><tr><th>English</th><th>本站统一译名</th><th>不采用</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>token</td><td>词元</td><td class="bad">token（不加说明地裸用）、字、词</td><td>模型处理文本的最小单位，既不是「词」也不是「字」；中英文每词的词元数差别很大，长度不可跨语言直接比。</td></tr>
+        <tr><td>embedding</td><td>嵌入</td><td class="bad">向量嵌入、词嵌入（除非特指词）</td><td>把离散对象映射成连续向量。「靠近」是训练目标还是副产品，取决于训练方式，别默认它一定聚拢。</td></tr>
+        <tr><td>surprise / self-information</td><td>惊讶度</td><td class="bad">惊喜度、自信息</td><td>单个结果的意外程度，等于 −log p；取期望就得到熵。</td></tr>
+        <tr><td>KL divergence</td><td>KL 散度</td><td class="bad">KL 距离</td><td>用 q 代替 p 编码时多付的那部分码长。它不对称、不满足三角不等式，所以严格说不是「距离」；方向选择（前向 / 后向）会改变优化行为。</td></tr>
+        <tr><td>parameter</td><td>参数</td><td class="bad">权重（除非特指可训练矩阵元素）</td><td>模型内部可训练的数值，包含权重、偏置与归一化系数。</td></tr>
+        <tr><td>weight</td><td>权重</td><td class="bad">参数（除非特指线性组合系数）</td><td>网络里乘在输入上的系数。注意「注意力权重」「类别权重」是另外两个语境。</td></tr>
+        <tr><td>loss / cost function</td><td>损失</td><td class="bad">代价函数、误差</td><td>衡量预测与真实差多少的单一数值。误差是单次差值，损失是聚合后的度量，两者不是一回事。</td></tr>
+        <tr><td>cross-entropy</td><td>交叉熵</td><td>—</td><td>按真实分布 p 评分却用 q 编码时的总平均码长，等于信息熵加 KL 散度；分类任务的默认损失。</td></tr>
+        <tr><td>perplexity</td><td>困惑度</td><td class="bad">复杂度</td><td>交叉熵取指数，读作「平均有多少个说得过去的选择」；「复杂度」在算法领域另有所指。</td></tr>
+        <tr><td>gradient</td><td>梯度</td><td>—</td><td>损失上升最快的方向，负梯度才是下降方向，且这个说法只在欧氏度量与无穷小步长的邻域内成立。</td></tr>
+        <tr><td>learning rate</td><td>学习率</td><td class="bad">步长</td><td>每次沿负梯度方向挪多远。「步长」只在完全不涉及调度策略时才勉强可用。</td></tr>
+        <tr><td>backpropagation</td><td>反向传播</td><td class="bad">BP</td><td>按计算图从输出回推每个参数该负多少责任。BP 是典型自造缩写，正文不出现。</td></tr>
+        <tr><td>activation function</td><td>激活函数</td><td class="bad">激励函数</td><td>给网络加入非线性的逐元素运算。「激励」是控制论里的说法。</td></tr>
+        <tr><td>receptive field</td><td>感受野</td><td class="bad">视野</td><td>输出位置能看到多少输入范围。「视野」会被理解成整体可见范围，与逐层的计算无关。</td></tr>
+        <tr><td>attention</td><td>注意力</td><td class="bad">关注机制</td><td>按相关性为上下文各部分动态分配加权。「机制」二字只在首次引入时用，之后叫「注意力」。</td></tr>
+        <tr><td>query / key / value</td><td>查询 / 键 / 值</td><td class="bad">Q/K/V（正文首次不缩写）</td><td>想找什么 / 用来被比对的名片（是连续打分，不是检索命中）/ 比对后取走的内容。</td></tr>
+        <tr><td>permutation equivariant</td><td>排列等变</td><td class="bad">排列不变</td><td>输入行顺序变了，输出行跟着变同样的顺序，但每行内容不变。「排列不变」是池化才有的性质，别混。</td></tr>
+        <tr><td>feed-forward network</td><td>前馈网络</td><td class="bad">FFN（首次不缩写）、全连接层（泛用）</td><td>逐位置的两层全连接，在注意力之后做非线性加工。</td></tr>
+        <tr><td>BatchNorm</td><td>批归一化</td><td class="bad">BN</td><td>沿 batch 维对每个特征做标准化，因此推理时依赖已积累的运行统计量。</td></tr>
+        <tr><td>LayerNorm</td><td>层归一化</td><td class="bad">LN（首次不缩写）</td><td>对每个样本自己的特征维度做标准化，与 batch 无关，所以序列模型用它。</td></tr>
+        <tr><td>pre-LN / post-LN</td><td>前接式 / 后接式</td><td>—</td><td>指归一化放在子层之前还是之后。孰优孰劣本站标为争议：训练稳定性与最终性能结论并不一致。</td></tr>
+        <tr><td>positional encoding</td><td>位置编码</td><td class="bad">位置嵌入</td><td>把「第几个」的信息注入词元表示。「嵌入」专指 embedding，不要与它混用。</td></tr>
+        <tr><td>RoPE</td><td>旋转位置编码</td><td>—</td><td>用旋转角度表示相对位置的编码方案，天然对长度外推友好一些（但仍然会退化）。</td></tr>
+        <tr><td>residual connection</td><td>残差连接</td><td class="bad">跳跃连接</td><td>把输入直接加到输出上，保住梯度通路。「跳跃」听起来像可以绕过计算，实际是相加。</td></tr>
+        <tr><td>pretraining</td><td>预训练</td><td class="bad">预学习</td><td>在海量无标注数据上做下一词元预测。「预学习」会被当成「先学一点」。</td></tr>
+        <tr><td>scaling law</td><td>规模定律</td><td class="bad">缩放律</td><td>损失随参数量 / 数据量 / 算力呈幂律下降的经验规律。「缩放」容易和 resize 混。</td></tr>
+        <tr><td>emergent ability</td><td>涌现能力（emergent ability）</td><td>—</td><td><strong>争议</strong>：规模跨过某阈值后才出现的能力。是否真有「突变」高度依赖评测指标是离散还是连续，本站并列保留英文原词。</td></tr>
+        <tr><td>fine-tuning</td><td>微调</td><td class="bad">精调</td><td>在特定数据上继续训练已训好的模型。「精调」暗示精度提升，但微调也常带来退化。</td></tr>
+        <tr><td>alignment</td><td>对齐（alignment）</td><td class="bad">一致性</td><td><strong>争议</strong>：使模型行为符合人类意图与价值。中文常与 consistency（一致性）混用，本站一律译「对齐」。</td></tr>
+        <tr><td>calibration</td><td>校准</td><td>—</td><td>报出的置信度与实际正确率是否相符。与 alignment 是两个不同概念，别混。</td></tr>
+        <tr><td>RLHF</td><td>基于人类反馈的强化学习（RLHF）</td><td>—</td><td>SFT → 奖励模型 → 策略优化的三段后训练流程。首次必须展开。</td></tr>
+        <tr><td>reward model</td><td>奖励模型</td><td class="bad">RM（首次不缩写）、打分器</td><td>学习人类偏好、给回答打分的模型；它给出的分数只在同一批比较里有意义。</td></tr>
+        <tr><td>hallucination</td><td>幻觉</td><td class="bad">胡说八道（口语可用，正文用「幻觉」）</td><td>生成流畅但与事实或上下文不符的内容，包括与给定材料不符。</td></tr>
+        <tr><td>temperature</td><td>温度</td><td>—</td><td>采样前对未归一化得分的缩放系数，控制分布的平坦程度；它不改变模型学到的东西。</td></tr>
+        <tr><td>logit</td><td>未归一化得分</td><td class="bad">logits（裸用）</td><td>softmax 之前的实数分数，本身不是概率。</td></tr>
+        <tr><td>sampling</td><td>采样</td><td class="bad">抽样</td><td>按概率分布挑下一个词元的过程。「抽样」在统计里另指取样。</td></tr>
+        <tr><td>top-p / nucleus</td><td>核采样</td><td>—</td><td>只保留累计概率达到 p 的最小词元集合，再在其中重新归一化。</td></tr>
+        <tr><td>context window</td><td>上下文窗口</td><td class="bad">语境长度</td><td>一次推理能「看到」的词元上限。它是窗口，不是长度指标。</td></tr>
+        <tr><td>KV cache</td><td>键值缓存</td><td>—</td><td>复用历史词元的键 / 值以避免重复计算。省算力但不省内存，显存占用随已生成词元数线性增长。</td></tr>
+        <tr><td>inference</td><td>推理</td><td class="bad">推断</td><td>用训好的模型生成输出。「推断」易与逻辑推断混，尤其在被用来翻译 reasoning 时。</td></tr>
+        <tr><td>multimodal</td><td>多模态</td><td>—</td><td>同一模型处理文本 + 图像等多种输入形态。「跨模态」指不同形态之间的迁移，别混。</td></tr>
+        <tr><td>CLIP</td><td>图文对比模型</td><td>—</td><td>图像与文本各一个编码器，训练时配对拉近、不配对推开，使两者落进同一空间比方向。</td></tr>
+        <tr><td>patch</td><td>图像块</td><td class="bad">方块、图像块词元</td><td>ViT 把图像切成的固定小块。本站不自造「图像块词元」这种复合词，需要时在正文说明它充当词元。</td></tr>
+        <tr><td>InfoNCE</td><td>InfoNCE（保留原词）</td><td>—</td><td>对比学习的损失：把配对样本的相似度从一批负样本里「考」出来。译名反而丢信息，故保留。</td></tr>
+        <tr><td>zero-shot classification</td><td>零样本分类</td><td>—</td><td>该任务一个标注都不给、不加分类头，只靠候选文本描述来分类。它<strong>不等于</strong>「从没见过这个概念」。</td></tr>
+        <tr><td>vector quantization</td><td>向量量化</td><td class="bad">VQ（首次不缩写）</td><td>把连续向量硬映射到一本有限码本上，从而让图像也能被表示成离散词元。</td></tr>
+        <tr><td>agent</td><td>智能体</td><td class="bad">代理</td><td>能规划、调用工具、观察结果的模型系统。「代理」与网络代理 / proxy 撞车。</td></tr>
+        <tr><td>tool use / function calling</td><td>工具调用</td><td class="bad">函数调用（保留给代码语境）</td><td>模型输出结构化请求让外部执行。「函数调用」留给真正的编程语境。</td></tr>
+        <tr><td>RAG</td><td>检索增强生成（RAG）</td><td>—</td><td>先检索资料再让模型基于资料作答。首次必须展开；它缓解但不消除幻觉。</td></tr>
+        <tr><td>benchmark</td><td>基准测试</td><td class="bad">跑分</td><td>标准化任务集，用于横向比较。「跑分」把「是否被训过」这层信息抹掉了。</td></tr>
+        <tr><td>saturation</td><td>（基准）饱和</td><td>—</td><td>模型分数逼近上限导致区分度消失，此后比较不再有信息量。括号表示主语是基准。</td></tr>
+        <tr><td>jailbreak</td><td>越狱</td><td class="bad">破甲</td><td>用特殊输入绕过安全限制。「破甲」是游戏黑话。</td></tr>
+        <tr><td>prompt injection</td><td>提示注入</td><td class="bad">提示词注入（冗长）、间接注入（除非强调来源）</td><td>把指令藏进被处理的数据里劫持模型。与越狱的区别在于指令来自外部数据而非用户本人。</td></tr>
+        <tr><td>red teaming</td><td>红队测试</td><td>—</td><td>主动攻击式地寻找失效模式；产出的是攻击面清单，不是通过率。</td></tr>
+        <tr><td>scalable oversight</td><td>可扩展监督</td><td>—</td><td>如何用较弱的人监督较强的模型，包含分工、抽检、委托等路线。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ------------------------------------------------------------ 4 -->
+  <section class="section">
+    <div class="section-hd"><h2>搜索是怎么排序的</h2><span class="cnt" id="wCnt"></span><span class="hint">权重来自 AI.WEIGHTS，下表由脚本实时读取</span></div>
+    <p>
+      检索内核先把查询串切成两类词：<strong>主查询词</strong>（按空白与 <code>,，、;；/|</code> 切分）和
+      <strong>二字滑窗词</strong>（中文串长度超过 2 时自动补出，用来让「注意力机制」也能召回「注意力」）。
+      然后对每个词逐字段打分、把该条术语的各字段得分相加，再对所有词求和。字段倾向大致是这条阶梯：
+      <strong>英文名精确 = 中文名精确 &gt; 标识符精确 &gt; 别名 &gt; 拼音全拼 &gt; 拼音首字母 &gt; 各类前缀 / 词首 &gt; 包含 &gt; 释义命中 &gt; 标签 / 分类 &gt; 关联术语命中</strong>。
+      名字命中永远高于正文命中：搜「词元」应该先看词条本身，而不是那些释义里提到词元的条目。
+    </p>
+    <p>
+      但真正决定前排顺序的不只是上面的加法分数，还有一条<strong>命中层级（tier）</strong>：
+      内核同时记录这次命中有多「正面」——tier 3 是某个名称字段完全等于查询词，tier 2 是名称前缀命中，
+      tier 1 是名称子串命中，tier 0 是只在释义 / 标签 / 分类 / 关联术语里撞到。
+      排序时<strong>先比 tier 再比分数</strong>，并且分数还会乘以 <code>1 + 0.6 × tier</code>。
+      这一层是为了防止「名字里带这几个字」的长条目把「就叫这个名字」的条目挤下去：
+      打「上下文」，上下文窗口与上下文学习会稳定排在只在释义里撞到该词的概念前面。
+    </p>
+    <p>
+      另有三条规则值得单独说明。其一，<strong>多词查询要求全部命中才排得高</strong>：
+      每有一个<strong>主查询词</strong>完全没命中，整条结果的总分就乘以一次惩罚系数（下表 <code>missFactor</code>），
+      两个词都没命中就是它的平方——所以部分相关仍会出现，但会被压到后面，不会像某些引擎那样直接丢弃；
+      二字滑窗词不参与这个惩罚，它们只以四成权重加分，避免把一个长名字拆碎误判。
+      其二，查询词拼起来正好等于完整条目名时另有加成（<code>phraseBonus</code>），并把层级直接抬到最高。
+      其三，同 tier 同分时按「进阶 &gt; 核心 &gt; 入门 → 中文名更短 → 英文字典序」稳定排序。
+      页面上那条百分比是把最终分数除以最高分换算的，只表示「与第一名相比有多相关」，不是绝对匹配度。
+    </p>
+    <table class="gloss" id="wTable">
+      <thead><tr><th>匹配位置</th><th>权重键</th><th>数值</th><th>说明</th></tr></thead>
+      <tbody id="wBody">
+        <tr><td>—</td><td>—</td><td>—</td><td>未能读取 <code>AI.WEIGHTS</code>：请确认 <code>assets/engine.js</code> 与本页面在同一目录。</td></tr>
+      </tbody>
+    </table>
+    <p class="hintline" style="text-align:left">
+      表中数值是页面加载时从 <code>AI.WEIGHTS</code> 现场读出来的，改 <code>assets/engine.js</code> 里的权重表，这一页会跟着变。
+      每个键都真的被打分逻辑引用；<code>defCap</code> / <code>longCap</code> / <code>relCap</code> 是三处封顶值，
+      用来防止长文本靠出现次数刷分，<code>missFactor</code> 则是多词查询的未命中折减系数。
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------ 5 -->
+  <section class="section">
+    <div class="section-hd"><h2>键盘快捷键</h2><span class="hint">在搜索页生效</span></div>
+    <table class="gloss">
+      <thead><tr><th>按键</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>/</kbd></td><td>把焦点交给搜索输入框（并选中已有内容），无需先点鼠标。</td></tr>
+        <tr><td>直接输入</td><td>输入即搜：边打字边出结果，不需要按回车或按钮；回车只是把当前查询写进地址栏，方便回退与分享。</td></tr>
+        <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>在结果列表行间移动焦点，回车进入详情。</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>清空输入框并回到初始状态。</td></tr>
+      </tbody>
+    </table>
+    <p>
+      深色 / 浅色主题由顶栏按钮切换，选择记在浏览器本地，下次打开自动沿用；
+      没记过就跟随系统的 <code>prefers-color-scheme</code>。
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------ 6 -->
+  <section class="section">
+    <div class="section-hd"><h2>数据来源与边界</h2></div>
+    <p>
+      核心 55 条译名参考自另一项目 <code>ai-principles-web</code> 的术语表
+      （<code>docs/glossary.md</code>）。那个项目对本站<strong>只作参考，不运行、不修改</strong>；
+      本页对照表里的译名与「不采用」写法与它保持一致，其余条目与全部数据字段为本站补充。
+      数据本身是随页面加载的脚本文件（<code>data/*.js</code>），没有构建步骤，改完刷新即可生效。
+    </p>
+    <div class="note warn">
+      <strong>关于释义的可靠性。</strong>
+      <code>def</code> 与 <code>long</code> 两个字段是<strong>为本项目重写的</strong>，力求准确、并刻意多写了边界与反面提醒
+      （例如「困惑度不等于复杂度」「零样本分类不等于从没见过这个概念」），但它<strong>不能替代论文与教材</strong>。
+      它是查「这个词该译成什么、大致指什么」的对照工具，不是可引用的定义出处。
+      前沿且存在争议的概念——涌现能力（emergent ability）、对齐（alignment）、pre-LN / post-LN 孰优——本页已明确标出「争议」，
+      请把它当成「此处尚无共识」的信号，而不是一个结论。
+      本站不给出具体论文页码或引文编号：条目少、更新快，写了反而容易过期或写错。
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ 7 -->
+  <section class="section">
+    <div class="section-hd"><h2>局限与可改进</h2><span class="hint">已知的，不是将来才有的</span></div>
+    <ul>
+      <li><strong>拼音只覆盖中文名字段。</strong>能搜拼音靠的是每条里的 <code>pinyin</code>，
+        引擎在索引时切音节、派生出全拼 <code>pyFull</code> 与首字母 <code>py1</code>（数据里手写的 <code>py1</code> 会被派生值覆盖）；
+        纯英文名（Transformer、Softmax 等）没有拼音，用英文名本身兜底，所以它们的检索路径就是英文名。
+        释义与长文里的中文没有拼音化，所以打全拼搜不到「只出现在释义里的词」，得改用汉字。
+        首字母还有天然碰撞：打 <code>cy</code> 首先出来的是「采样」，「词元」排在它后面——两者首字母相同，
+        碰撞只能靠多打几个字母或改搜汉字来区分。</li>
+      <li><strong><code>related</code> 是悬空引用的高发地。</strong>内核按 <code>id</code> 解析，指向不存在的 <code>id</code> 时不报错也不提示，
+        只是相关推荐与「被引用」安静地少几项。当前已加载的分片内部引用全部可解析，但数据一旦拆成多个文件分片，
+        漏加载或拼错一处就会静默降级；新增分片时应当补一个断链检查，而不是靠人眼核对。</li>
+      <li><strong>没有全文索引，只有线性扫描。</strong>每次检索把所有条目逐个打分，当前条目量下是毫秒级，但条目上到几千以后必须换倒排索引；
+        中文二字滑窗本身也可能带来噪声命中。</li>
+      <li><strong>搜索框没有离线建议下拉。</strong>输入时要按 <code>/</code> 或到搜索页才好用；
+        顶栏那个框只支持回车跳转，不做候选提示。</li>
+      <li><strong>拼写容错很弱。</strong>编辑距离兜底只在其它字段全部失手、且查询词不短于 4 个字符时才生效，阈值固定为 1；
+        手滑打错两个字母，或者中文输入法串了行，就是零结果。</li>
+      <li><strong>无中文分词与词形还原。</strong>英文 <code>token</code> 与 <code>tokenization</code> 只靠子串与前缀联系，
+        复数、动词化形式没有归一化，同义词也只靠 <code>aka</code> 与 <code>tags</code> 里有没有人工写进去。</li>
+      <li><strong>术语覆盖面偏窄。</strong>目前集中在语言模型与其周边，计算机视觉细节、强化学习、语音、传统机器学习只点到为止；
+        没有版本与时间信息，也无法反映某个译名在 2024 年之后是否已经改朝换代。</li>
+    </ul>
+    <p class="hintline" style="text-align:left">数据是纯文本，欢迎指出某条统一译名或禁用译名的不妥。</p>
+  </section>
+
+  <footer class="foot">
+    <span class="stat" id="footStat"></span>
+    <a href="index.html">浏览</a>
+    <a href="search.html">搜索</a>
+    <span>纯静态页面，可直接双击 <kbd>index.html</kbd> 打开使用。</span>
+  </footer>
+
+</main>
+
+<script src="data/data-core.js"></script>
+<script src="data/data-llm.js"></script>
+<script src="data/data-systems.js"></script>
+<script src="data/data-extra.js"></script>
+<script src="data/data-agents.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+/*
+ * 关于页：只需三件事——
+ *   1) 挂顶栏与主题（复用 AIUI）
+ *   2) 把译名对照表的行数、以及数据规模写进页面上的计数位
+ *   3) 用 AI.WEIGHTS 的实际数值渲染检索权重表
+ * 全部 ES5，任何一步失败都不阻断其它内容显示。
+ */
+(function (global) {
+  "use strict";
+
+  var AI = global.AIGlossary;
+  var AIUI = global.AIUI;
+
+  /* ---------------- 1. 顶栏与主题 ---------------- */
+  try {
+    AIUI.buildChrome('about');
+    AIUI.applyTheme(AIUI.currentTheme());
+  } catch (e) { /* 顶栏失败不影响正文 */ }
+
+  function text(id, s) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = s;
+  }
+
+  /* ---------------- 2. 译名对照表行数 ---------------- */
+  (function mapCount() {
+    var t = document.getElementById("mapTable");
+    if (!t) return;
+    var rows = t.getElementsByTagName("tbody");
+    var n = rows.length ? rows[0].getElementsByTagName("tr").length : 0;
+    text("mapCnt", n ? n + " 条对照" : "");
+  })();
+
+  /* ---------------- 3. 检索权重表（读 AI.WEIGHTS） ---------------- */
+  (function weightsTable() {
+    var body = document.getElementById("wBody");
+    if (!body) return;
+    var W = AI && AI.WEIGHTS ? AI.WEIGHTS : null;
+    if (!W) return; /* 保留占位行，告诉用户缺什么 */
+
+    /* 顺序即阶梯：越靠前越「正面」；数值一律从 AI.WEIGHTS 读，不硬编码。
+       末尾四项在权重表里声明了、但当前打分逻辑没有引用，说明列已注明。 */
+    var ROWS = [
+      ["enExact", "英文名精确匹配", "查询词与 en 完全相同 → tier 3"],
+      ["zhExact", "中文名精确匹配", "查询词与 zh（去空格后）完全相同 → tier 3"],
+      ["idExact", "标识符精确匹配", "查询词等于 id，如 kv-cache → tier 3"],
+      ["akaExact", "别名精确匹配", "命中 aka 里的某个别名 → tier 3"],
+      ["pyExact", "拼音全拼匹配", "如 qianru 命中「嵌入」；是整串相等，不是前缀 → tier 2"],
+      ["iniExact", "拼音首字母匹配", "如 zyl 命中「注意力」；整串相等 → tier 2"],
+      ["enPrefix", "英文名前缀", "如 attent 命中 attention → tier 2"],
+      ["zhPrefix", "中文名前缀", "如 上下 命中「上下文窗口」→ tier 2"],
+      ["pyPrefix", "拼音全拼前缀", "长名字开头几字也能命中 → tier 2"],
+      ["iniPrefix", "拼音首字母前缀", "两字母以上才参与 → tier 2"],
+      ["enWord", "英文词首命中", "复合英文名中间的词首，如 field 命中 receptive field → tier 1"],
+      ["enHas", "英文名包含", "非词首的英文子串 → tier 1"],
+      ["akaHas", "别名包含", "别名里的非开头命中 → tier 1"],
+      ["pyHas", "拼音包含", "全拼中间出现 → tier 1"],
+      ["idHas", "标识符包含", "id 中间出现（会被截到 idHas + 20 以内）"],
+      ["defHas", "一句话释义命中", "def 字段包含查询词；只有名称全落空时才写进命中原因"],
+      ["tagHas", "标签命中", "tags 数组里任一项包含查询词"],
+      ["relHas", "关联术语命中", "related 指向的条目名里出现了查询词，累加后受 relCap 截断"],
+      ["catHas", "分类命中", "分类中文名或分类键包含查询词"],
+      ["longHas", "长文释义命中", "long 字段包含查询词，只作兜底"],
+      ["levelHas", "难度名命中", "搜「入门」「进阶」这类筛词"],
+      ["fuzzy", "近似匹配（拼写容错）", "名称字段全失手、且查询词不短于 4 个字符时，编辑距离 ≤ 1"],
+      ["phraseBonus", "整体短语加成", "多个词拼起来正好等于完整条目名时额外加分，并把层级抬到最高"],
+      ["relCap", "关联命中的上限", "relatedScore 累加后被截到此值，防止关联太多刷分"],
+      ["missFactor", "未命中惩罚系数", "每有一个主查询词完全没命中，总分乘以它一次（两个就是平方）；二字滑窗词不受此惩罚"],
+      ["zhHas", "中文名包含关键词", "中文名里出现查询词但不在开头（tier 1），比前缀命中低一档"],
+      ["idPrefix", "标识符前缀", "id 以查询词开头；id 整体权重低于英文名"],
+      ["defCap", "释义得分上限", "释义里出现多次也只累计到此值，防止正文重复刷分"],
+      ["longCap", "长文得分上限", "同上，作用于 long 字段"]
+    ];
+
+    var escFn = AI && AI.esc ? AI.esc : function (s) { return String(s == null ? "" : s); };
+    var html = [], n = 0, i, k, v;
+    for (i = 0; i < ROWS.length; i++) {
+      k = ROWS[i][0]; v = W[k];
+      if (typeof v !== "number") continue; /* 权重表里没有的键不编造数值 */
+      n++;
+      html.push(
+        '<tr><td>' + escFn(ROWS[i][1]) + '</td>' +
+        '<td><code>' + escFn(k) + '</code></td>' +
+        '<td>' + v + '</td>' +
+        '<td>' + escFn(ROWS[i][2]) + '</td></tr>'
+      );
+    }
+    body.innerHTML = html.join("");
+    text("wCnt", n ? n + " 个权重键" : "");
+  })();
+
+  /* ---------------- 4. 页脚统计：N 条术语 · M 个分类 ---------------- */
+  (function footStat() {
+    var total = 0, cats = {}, ncat = 0;
+    try {
+      var list = (AI && AI.terms) ? AI.terms() : (global.AI_TERMS || []);
+      total = list.length;
+      for (var i = 0; i < total; i++) {
+        var c = list[i] && list[i].cat;
+        if (c && !cats[c]) { cats[c] = 1; ncat++; }
+      }
+    } catch (e) { total = 0; }
+
+    if (!total) { text("footStat", "术语数据未能加载"); return; }
+    text("footStat", "共收录 " + total + " 条术语 · " + ncat + " 个分类");
+  })();
+
+})(window);
+</script>
+</body>
+</html>

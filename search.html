@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>搜索术语 · AI 术语词典</title>
+<meta name="description" content="按关键词搜索 AI 术语，结果按关联程度排序，支持中文、英文、拼音全拼与拼音首字母。">
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.setAttribute('data-theme', (function(){try{var t=localStorage.getItem('ai-glossary-theme');if(t==='light'||t==='dark')return t;}catch(e){}return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<header class="chrome" id="chrome" data-page="search"></header>
+
+<main class="wrap" id="main">
+
+  <div class="searchhero">
+    <form class="bigsearch" id="bigForm" autocomplete="off">
+      <input type="search" id="bigInput" name="q" placeholder="输入关键词：注意力 / attention / zhuyili / zyl"
+             aria-label="搜索关键词" aria-describedby="searchHint">
+      <button type="submit">搜索</button>
+    </form>
+
+    <div class="searchopts">
+      <label>分类
+        <select id="optCat"><option value="all">全部分类</option></select>
+      </label>
+      <label>难度
+        <select id="optLevel">
+          <option value="all">全部难度</option>
+          <option value="basic">入门</option>
+          <option value="core">核心</option>
+          <option value="advanced">进阶</option>
+        </select>
+      </label>
+      <label>结果数
+        <select id="optLimit">
+          <option value="0">不限</option>
+          <option value="10">前 10 条</option>
+          <option value="20">前 20 条</option>
+          <option value="50">前 50 条</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="optReason" checked> 显示命中原因</label>
+    </div>
+
+    <p class="hintline" id="searchHint">
+      可以搜<strong>中文名</strong>（嵌入）、<strong>英文</strong>（embedding）、<strong>拼音全拼</strong>（qianru）、
+      <strong>拼音首字母</strong>（qr），也可以搜释义里的词（如「多付的码长」会命中 KL 散度）。
+    </p>
+
+    <div class="examples" id="examples"></div>
+  </div>
+
+  <div id="resultsArea">
+    <p class="loading">正在准备…</p>
+  </div>
+
+  <footer class="foot">
+    <span class="stat" id="footStat"></span>
+    <span>排序规则：命中的字段越「正面」，分数越高；查询词全部命中才给高分，未命中的词按惩罚系数折减。</span>
+    <a href="index.html">浏览全部</a>
+    <a href="about.html">关于</a>
+  </footer>
+</main>
+
+<script src="data/data-core.js"></script>
+<script src="data/data-llm.js"></script>
+<script src="data/data-systems.js"></script>
+<script src="data/data-extra.js"></script>
+<script src="data/data-agents.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/search-page.js"></script>
+</body>
+</html>

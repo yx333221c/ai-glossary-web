@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 术语大全 | AI Glossary</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 术语词典 · 浏览全部术语</title>
+<meta name="description" content="人工智能领域术语的中英对照词典：词元、嵌入、注意力、反向传播、RLHF、检索增强生成等，含统一译名与一句话释义。">
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.setAttribute('data-theme', (function(){try{var t=localStorage.getItem('ai-glossary-theme');if(t==='light'||t==='dark')return t;}catch(e){}return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';})());</script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🧠 AI 术语词典</h1>
-            <p class="subtitle">人工智能领域的核心概念与专业术语</p>
-        </header>
+<a class="skip-link" href="#main">跳到正文</a>
+<header class="chrome" id="chrome" data-page="browse"></header>
 
-        <nav class="search-section">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="搜索 AI 术语...输入关键词查找相关概念">
-                <span class="search-icon">🔍</span>
-            </div>
-            <div id="searchResults" class="results-container"></div>
-        </nav>
-
-        <main class="glossary-grid" id="glossaryGrid">
-            <!-- Terms will be populated here -->
-        </main>
-
-        <footer>
-            <p>AI Glossary &copy; 2024 | 涵盖机器学习、深度学习、自然语言处理等核心概念</p>
-        </footer>
+<main class="wrap" id="main">
+  <div class="hero">
+    <h1>AI 术语词典</h1>
+    <p class="lead">
+      人工智能领域的常用术语对照表：每个条目给出<strong>中文译名、英文原词、一句话释义</strong>，
+      点开还能看到机制说明、常见误译与相关术语。支持中文、英文、拼音全拼与拼音首字母检索。
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="search.html">进入搜索页 →</a>
+      <a class="btn" href="about.html">译名规范与说明</a>
+      <a class="btn" href="#" id="shuffleBtn">随机看一个</a>
     </div>
+  </div>
 
-    <script src="app.js"></script>
+  <div class="filterbar" id="filterbar"></div>
+
+  <div class="alpha" id="alphaIndex" hidden></div>
+
+  <div id="browseBody">
+    <p class="loading">正在加载术语数据…</p>
+  </div>
+
+  <footer class="foot">
+    <span class="stat" id="footStat"></span>
+    <span>纯静态页面，可直接双击 <kbd>index.html</kbd> 打开使用。</span>
+    <a href="search.html">搜索</a>
+    <a href="about.html">关于</a>
+  </footer>
+</main>
+
+<script src="data/data-core.js"></script>
+<script src="data/data-llm.js"></script>
+<script src="data/data-systems.js"></script>
+<script src="data/data-extra.js"></script>
+<script src="data/data-agents.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/browse.js"></script>
 </body>
 </html>

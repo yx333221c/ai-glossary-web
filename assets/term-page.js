@@ -59,6 +59,11 @@
     '<section class="block"><h2>一句话释义</h2><p class="oneline">' +
       AI.esc(term.def) + "</p></section>" +
 
+    (term.plain
+      ? '<section class="block"><h2>白话版<span class="sub">不懂也能读，先看到这里</span></h2>' +
+        '<p class="plain">' + AI.esc(term.plain) + "</p></section>"
+      : "") +
+
     '<section class="block"><h2>展开说</h2><p class="longtext">' +
       AI.esc(term.long || "（本条目暂无补充说明。）") + "</p></section>";
 

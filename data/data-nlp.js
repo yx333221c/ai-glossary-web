@@ -1,9 +1,86 @@
-// AI 术语词典数据分片：大语言模型 / NLP / 生成
-(function () {
-  var T = (window.AI_TERMS = window.AI_TERMS || []);
+/*
+ * AI 术语词典 · 分类数据：cat = "nlp"
+ * 由 tools/split-by-category.js 从原分片重切而来；条目正文保持原样。
+ * 字段与写法约定见 README「数据格式」。
+ */
+(function (global) {
+  var T = (global.AI_TERMS = global.AI_TERMS || []);
 
-  /* ---------------- 语言模型与整体架构 ---------------- */
   T.push(
+    {
+      id: "attention", en: "attention", zh: "注意力", aka: ["注意力机制", "attention mechanism"], pinyin: "zhu yi li",
+      cat: "nlp", level: "core", src: "glossary",
+      def: "按相关性为上下文各部分动态分配加权。",
+      long: "与固定权重的卷积不同，注意力的权重是由内容当场算出来的，所以能建模任意距离的关系。「注意力」一词常被夸大成「模型在思考什么」：它只是一次加权求和，权重高不等于人类意义上的重要，把注意力图直接解释成因果理由是常见误读。",
+      avoid: ["关注机制", "把注意力权重当作可解释性的证据"],
+      related: ["qkv", "self-attention", "multi-head-attention", "ffn"], tags: ["架构", "Transformer"]
+    },
+    {
+      id: "qkv", en: "query / key / value", zh: "查询 / 键 / 值", aka: ["Q/K/V", "query-key-value"], pinyin: "cha xun jian zhi",
+      cat: "nlp", level: "core", src: "glossary",
+      def: "想找什么 / 用来被比对的名片 / 比对后取走的内容。",
+      long: "查询与键做点积得到打分，softmax 归一化后作为权重去加权取值。三者的角色由三个独立投影矩阵决定，不是同一个向量的三种叫法。要警惕：这里的「键」是连续打分用的表征，不同于数据库或向量检索里「精确命中」的键。",
+      avoid: ["Q/K/V（正文首次不缩写）", "把 key 理解成检索索引"],
+      related: ["attention", "kv-cache", "multi-head-attention"], tags: ["Transformer"]
+    },
+    {
+      id: "ffn", en: "feed-forward network", zh: "前馈网络", aka: ["FFN", "逐位置前馈层", "MLP 层"], pinyin: "qian kui wang luo",
+      cat: "nlp", level: "core", src: "glossary",
+      def: "逐位置两层全连接，注意力之后做非线性加工。",
+      long: "在每个位置独立地把表征升维（通常 4 倍）、过非线性、再降回来，参数量常占 Transformer 的一半以上。有研究把它看作「键值记忆」：注意力负责把信息搬到位，前馈层负责按模式查表变换。它逐位置独立，所以不含跨位置信息流。",
+      avoid: ["FFN（首次不缩写）", "全连接层（泛用易混）"],
+      related: ["attention", "mixture-of-experts", "activation-function"], tags: ["Transformer", "架构"]
+    },
+    {
+      id: "positional-encoding", en: "positional encoding", zh: "位置编码", aka: ["位置信息注入", "绝对位置编码"], pinyin: "wei zhi bian ma",
+      cat: "nlp", level: "core", src: "glossary",
+      def: "把「第几个」信息注入词元表示。",
+      long: "自注意力本身排列等变，不加位置信息则「猫追狗」与「狗追猫」无法区分。正弦编码用不同频率的三角函数提供多尺度相对关系；可学习编码更灵活但外推差。现代模型普遍转向相对位置方案，因为它直接编码「相隔多远」而非「我在哪」。",
+      avoid: ["位置嵌入（与词元嵌入混淆）"],
+      related: ["rope", "permutation-equivariant", "attention"], tags: ["Transformer"]
+    },
+    {
+      id: "rope", en: "RoPE", zh: "旋转位置编码", aka: ["Rotary Position Embedding", "旋转编码"], pinyin: "xuan zhuan wei zhi bian ma",
+      cat: "nlp", level: "advanced", src: "glossary",
+      def: "用旋转角度表示相对位置的编码方案。",
+      long: "把查询与键按位置乘上一个旋转矩阵，点积之后结果只依赖两者位置差——绝对位置被注入到表示里，而打分天然变成相对。由于是乘性而非加性，外推行为比绝对编码好，配合位置插值还能把窗口拉长。缺点是长距离维度旋转极快，需 YaRN 类方法修正。",
+      avoid: ["把它称作绝对位置编码"],
+      related: ["positional-encoding", "attention", "qkv"], tags: ["Transformer", "长上下文"]
+    },
+    {
+      id: "in-context-learning", en: "in-context learning", zh: "上下文学习", aka: ["ICL", "示例提示"], pinyin: "shang wen xue xi",
+      cat: "nlp", level: "core",
+      def: "不改一个参数，仅靠提示里给的示范就学会新任务。",
+      long: "与微调的根本区别是「知识进的是上下文而不是权重」：换一次提示就换一次行为，关掉会话就消失。它使模型表现出惊人的适应性，但也很脆——示范顺序、标签分布不均、示例长度都会显著影响效果，这些敏感性与「真的学会了」并不相容。",
+      avoid: ["把它称为在线学习（in-context 与 online learning 不是一回事）"],
+      related: ["few-shot", "zero-shot-prompting", "chain-of-thought"], tags: ["提示", "能力"]
+    },
+    {
+      id: "language-model", en: "language model", zh: "语言模型", aka: ["LM", "生成式模型"], pinyin: "yu yan mo xing",
+      cat: "nlp", level: "basic",
+      def: "给一段文本（或下一词元）估概率的模型。",
+      long: "几乎所有现代大模型都建立在「下一词元预测」这一个目标上：把联合概率分解成一串条件概率逐词生成。理解这一点，就能理解幻觉、能力涌现与规模定律——它们都是同一个目标的副产物。区分「能预测下一词」与「理解语言」的争论也由此而来。",
+      avoid: ["把 LM 等同于聊天机器人", "随机鹦鹉（这只是立场，不是定义）"],
+      related: ["pretraining", "perplexity", "token"], tags: ["基础", "NLP"]
+    },
+    {
+      id: "chain-of-thought", en: "Chain-of-Thought", zh: "思维链", aka: ["CoT", "推理链"], pinyin: "si wei lian",
+      cat: "nlp", level: "core",
+      def: "让模型先把中间步骤写出来再给答案。",
+      long: "有效的直接原因很朴素：每个写下的词元都会进入后续的条件，等于把一次前向的容量摊到多步上去，也给了模型自我校正的落脚点。因此它的收益依赖基座能力——在够大的模型上有用，在小模型上可能反而引入错误步骤。要注意「步骤写出来」不等于「模型真的这样思考」。",
+      avoid: ["把 CoT 输出当作模型内部过程的忠实记录"],
+      related: ["in-context-learning", "emergent-ability", "reasoning-token"], tags: ["提示", "推理"]
+    },
+    {
+      id: "transformer", en: "Transformer", zh: "Transformer",
+      aka: ["Transformer 架构", "注意力架构", "变换器架构"], pinyin: "",
+      cat: "nlp", level: "core",
+      def: "完全依靠注意力机制做序列建模的架构，用并行训练取代循环结构，是现代大模型的共同底座。",
+      long: "2017 年论文《Attention Is All You Need》提出，编码器与解码器各由多层「多头自注意力 + 前馈网络」堆叠，配合残差连接、层归一化与位置编码。相比循环网络，它在训练时可对整个序列并行计算，因而能吃下海量数据；代价是自注意力带来序列长度的平方级计算量，长上下文成本随之陡增。今天的 GPT、LLaMA、Claude 等大多是它的仅解码器变体。",
+      avoid: ["把 Transformer 与「大语言模型」当同义词（前者是架构，后者由它实现）"],
+      related: ["attention", "self-attention", "multi-head-attention", "ffn", "positional-encoding", "residual-connection", "language-model", "decoder-only"],
+      tags: ["架构", "里程碑"]
+    },
     {
       id: "autoregressive-generation",
       en: "Autoregressive Generation",
@@ -18,52 +95,6 @@
       related: ["language-model", "causal-mask", "kv-cache", "decoder-only", "greedy-decoding"],
       tags: ["生成", "序列模型"]
     },
-    {
-      id: "decoder-only",
-      en: "Decoder-Only Architecture",
-      zh: "仅解码器架构",
-      aka: ["Decoder-Only", "单向自回归架构", "GPT 式架构"],
-      pinyin: "jinjiemaqijiagou",
-      cat: "dl",
-      level: "core",
-      def: "只保留 Transformer 解码器堆栈、用因果掩码做单向建模的结构，因目标统一、易规模化而成为主流大模型形态。",
-      long: "GPT 系列把它推广开来：输入与输出共用同一条词元序列，没有编码器与交叉注意力，同样参数预算下把全部容量用于自回归建模，扩规模时表现更稳。与之对照的编码器-解码器在需要显式读取长源序列的任务上仍有效。仅解码器不等于「只能生成」，判别任务也可写成生成，或用末位置的表示接分类头。",
-      avoid: ["单塔模型", "生成器网络"],
-      related: ["encoder-decoder", "causal-mask", "self-attention", "language-model", "ffn"],
-      tags: ["架构", "Transformer"]
-    },
-    {
-      id: "encoder-decoder",
-      en: "Encoder-Decoder",
-      zh: "编码器-解码器架构",
-      aka: ["Seq2Seq", "序列到序列", "Enc-Dec"],
-      pinyin: "bianmaqijiemaqijiagou",
-      cat: "dl",
-      level: "core",
-      def: "源序列先由双向编码器编成表示，再由自回归解码器经交叉注意力读取该表示逐词元输出，适合输入输出不对齐的转换任务。",
-      long: "源自神经机器翻译与 seq2seq 传统：编码器可一次看全文，解码器保持单向生成，二者用交叉注意力连接。T5、Whisper 与多数摘要、翻译模型沿用此结构。相比仅解码器，它把「读」与「写」分离，源序列表示可复用、编码一次的键值不必随生成重复参与，但双向预训练目标与统一自回归目标难以同时最优化。",
-      avoid: ["双向解码器", "编解码同构"],
-      related: ["cross-attention", "decoder-only", "self-attention", "language-model", "attention"],
-      tags: ["架构", "Transformer"]
-    },
-    {
-      id: "mixture-of-experts",
-      en: "Mixture of Experts",
-      zh: "专家混合",
-      aka: ["MoE", "稀疏专家混合", "MoE 架构"],
-      pinyin: "zhuanjiahunhe",
-      cat: "dl",
-      level: "advanced",
-      def: "在前馈层旁并列多个专家、由门控网络只激活其中少数几个，用稀疏路由把总参数量与单词元计算量解耦，代价是显存与训练不稳。",
-      long: "Switch Transformer 与 GShard 把路由简化为每词元只送一两个专家，并加负载均衡损失纠正专家被使用得极不均的现象。参数量随专家数增长而每词元前向算力近似不变，因此能以较低训练成本换更大容量；但全部专家权重都需常驻显存，跨设备分发还带来通信开销与吞吐抖动。路由是把词元分流到不同子网络，与多头注意力、模型集成都不是一回事。",
-      avoid: ["多模型集成", "多头注意力"],
-      related: ["ffn", "scaling-law", "parameter", "inference", "token"],
-      tags: ["架构", "稀疏计算"]
-    }
-  );
-
-  /* ---------------- 注意力机制 ---------------- */
-  T.push(
     {
       id: "self-attention",
       en: "Self-Attention",
@@ -133,12 +164,7 @@
       avoid: ["注意力遮罩", "蒙版"],
       related: ["causal-mask", "attention", "self-attention", "token", "eos-token"],
       tags: ["掩码", "工程实现"]
-    }
-  );
-
-  /* ---------------- 分词与词表 ---------------- */
-  T.push(
-    
+    },
     {
       id: "tokenizer",
       en: "Tokenizer",
@@ -222,58 +248,7 @@
       avoid: ["幻觉", "无法输入"],
       related: ["token", "vocabulary", "bpe", "hallucination", "tokenizer"],
       tags: ["分词", "边界情况"]
-    }
-  );
-
-  /* ---------------- 长上下文 ---------------- */
-  T.push(
-    {
-      id: "positional-interpolation",
-      en: "Position Interpolation",
-      zh: "位置插值",
-      aka: ["PI 位置插值", "线性位置插值", "RoPE 插值"],
-      pinyin: "weizhichazhi",
-      cat: "dl",
-      level: "advanced",
-      def: "把旋转位置编码的角度索引按比例压缩，使预训练长度之外的位置仍落在已学过的数值区间，以低成本扩展上下文窗口。",
-      long: "直接把超出训练范围的位置号送进模型，会遇上从未见过的旋转角度而严重退化；把位置索引除以缩放系数，相当于把更长的序列压回训练时的角度范围。插值后相邻词元的角度差变小，短程分辨力下降，通常还要少量长文本继续训练才能恢复质量。它是后续一系列长上下文改进的起点，相比重训位置方案代价小得多。",
-      avoid: ["位置外推", "无损扩窗"],
-      related: ["rope", "positional-encoding", "long-context", "context-window"],
-      tags: ["位置编码", "长上下文"]
     },
-    {
-      id: "long-context",
-      en: "Long Context",
-      zh: "长上下文",
-      aka: ["长窗口", "长上下文能力", "超长输入"],
-      pinyin: "zhangshangxiawen",
-      cat: "inference",
-      level: "core",
-      def: "模型可一次接收并能有效利用的输入长度；窗口标称值变长并不等于远距离信息都能被稳定读取，位置方案与训练数据才是关键。",
-      long: "上限由位置方案、注意力平方复杂度与键值缓存的线性增长共同决定，需要结构与系统两层改造来压成本。评测常观察到「中间丢失」：关键信息位于长序列中部时命中率明显下降，说明有效长度通常小于标称长度。长上下文与检索增强既可互相替代也可组合，前者更灵活、成本随长度上升，后者便宜但受检索质量限制。",
-      avoid: ["长记忆", "无限上下文"],
-      related: ["context-window", "kv-cache", "needle-in-haystack", "positional-interpolation", "rope", "rag"],
-      tags: ["长上下文", "推理"]
-    },
-    {
-      id: "needle-in-haystack",
-      en: "Needle In A Haystack",
-      zh: "大海捞针测试",
-      aka: ["NIAH", "捞针评测", "单针检索测试"],
-      pinyin: "dahailaozhenceshi",
-      cat: "inference",
-      level: "advanced",
-      def: "在很长的无关文本中插入一处细节再要求模型复述的评测法，用于检查长上下文的定位能力，但它只测检索、不测推理。",
-      long: "通常把「针」插入不同深度并扫描总长度，观察命中率变化，从而暴露中间丢失这类位置相关的失效。多针版本要求跨段汇总，难度陡增。它衡量的是能否找到并原样复述，无法说明模型能否在长文本上做比较、规划或全局归纳；因此通过捞针测试就宣称长上下文能力强属于过度推断，也常与基准饱和一并讨论。",
-      avoid: ["长文本推理测试", "记忆容量指标"],
-      related: ["benchmark", "long-context", "context-window", "rag", "saturation"],
-      tags: ["评测", "长上下文"]
-    }
-  );
-
-  /* ---------------- 提示与上下文学习 ---------------- */
-  T.push(
-    
     {
       id: "few-shot",
       en: "Few-Shot",
@@ -302,7 +277,6 @@
       related: ["zero-shot", "few-shot", "instruction-tuning", "pretraining", "in-context-learning"],
       tags: ["提示", "评测设定"]
     },
-    
     {
       id: "prompt-template",
       en: "Prompt Template",
@@ -330,69 +304,6 @@
       avoid: ["安全护栏", "不可见指令"],
       related: ["prompt-template", "prompt-injection", "jailbreak", "alignment", "instruction-tuning"],
       tags: ["提示", "安全"]
-    }
-  );
-
-  /* ---------------- 指令训练 ---------------- */
-  
-
-  /* ---------------- 解码策略 ---------------- */
-  T.push(
-    {
-      id: "greedy-decoding",
-      en: "Greedy Decoding",
-      zh: "贪心解码",
-      aka: ["Greedy Search", "逐步取最大值", "argmax 解码"],
-      pinyin: "tanxinjiema",
-      cat: "inference",
-      level: "basic",
-      def: "每一步都取当前条件分布里概率最高的词元，确定且可复现，但不保证整句联合概率最优，长文本容易陷入重复循环。",
-      long: "它是束宽为一的束搜索特例，也等价于温度趋近零的采样，因此常被当作默认与基线。贪心只做局部最优，可能在整体概率上输给某条次优前缀，尤其当后文强烈依赖早期选择时。重复循环并非贪心独有，但确定性输出没有随机性帮助跳出吸引子，于是长回答要么截断、要么靠重复惩罚压制——「温度设为零就更准」的说法并不成立。",
-      avoid: ["全局最优解码", "零风险输出"],
-      related: ["beam-search", "sampling", "temperature", "logit", "repetition-penalty"],
-      tags: ["解码", "推理"]
-    },
-    {
-      id: "beam-search",
-      en: "Beam Search",
-      zh: "束搜索",
-      aka: ["Beam Search", "集束搜索", "束宽解码"],
-      pinyin: "shusousuo",
-      cat: "inference",
-      level: "core",
-      def: "解码时保留得分最高的若干条前缀并行扩展的近似搜索，束宽为一即退化为贪心；在翻译任务有效，开放式对话常弃用。",
-      long: "它优化的是整句联合概率，而采样给出的是按分布抽出的句子，两者的典型输出并不相同。束宽越大越接近全局最优但仍是启发式，并且偏好短而保守的句子，通常需要配合长度惩罚。对话与创作场景里束搜索容易产出重复、平淡的回答，所以现代大模型更多用温度与核采样；把「束搜索等于更聪明」当默认直觉已经过时。",
-      avoid: ["最优解码保证", "宽度优先遍历"],
-      related: ["greedy-decoding", "sampling", "logit", "language-model", "top-p"],
-      tags: ["解码", "搜索"]
-    },
-    {
-      id: "repetition-penalty",
-      en: "Repetition Penalty",
-      zh: "重复惩罚",
-      aka: ["重复惩罚系数", "presence penalty", "frequency penalty"],
-      pinyin: "zhongfuchengfa",
-      cat: "inference",
-      level: "core",
-      def: "对已经出现过的词元下调其分数后再归一化生成，用以抑制复读；系数过大会连正常复现一起惩罚，伤害术语与结构一致性。",
-      long: "常见实现是把已出现词元的分数除以或减去一个系数，其中正分数除以惩罚、负分数乘以惩罚，效果并非线性；存在惩罚只看是否出现过，频率惩罚与出现次数成正比，二者语义不同。它掩盖而不是解决成因：贪心解码、多样性不足或模型本身陷入循环时，强行惩罚会扭曲分布并诱发无关注水。它与温度、核采样调节的东西也不是一回事。",
-      avoid: ["温度调节", "上下文裁剪"],
-      related: ["greedy-decoding", "sampling", "temperature", "top-p", "logit", "token"],
-      tags: ["解码", "采样技巧"]
-    },
-    {
-      id: "stop-token",
-      en: "Stop Token",
-      zh: "停止词元",
-      aka: ["stop token", "终止词元", "序列终止符"],
-      pinyin: "tingzhiciyuan",
-      cat: "inference",
-      level: "basic",
-      def: "推理时约定一旦生成就立刻截断输出的词元，由采样循环逐个检查；它与结束词元相关，但服务层常配置成不止一个编号。",
-      long: "服务端一般维护一组停止词元：既有模型学到的 EOS，也有对话分隔符，以防模型越界续写对方的台词。词元编号与具体词表绑定，同一个字符串在不同模型下编号不同，把编号硬编码进配置会造成错误截断或根本不截断。模板写错时的典型症状是停止词元概率始终极低、输出一直顶到上下文上限，问题出在格式而非采样温度。",
-      avoid: ["EOS 与它必然同一", "标点即终止"],
-      related: ["eos-token", "token", "sampling", "prompt-template", "inference"],
-      tags: ["解码", "工程实现"]
     },
     {
       id: "eos-token",
@@ -407,11 +318,7 @@
       avoid: ["填充词元", "换行符"],
       related: ["stop-token", "token", "attention-mask", "sampling", "inference"],
       tags: ["词元", "特殊标记"]
-    }
-  );
-
-  /* ---------------- 经典对照 ---------------- */
-  T.push(
+    },
     {
       id: "ngram",
       en: "N-gram",
@@ -427,4 +334,4 @@
       tags: ["统计语言模型", "历史方法"]
     }
   );
-})();
+})(window);

@@ -4,7 +4,9 @@
 
 在线版：<https://yx333221c.github.io/ai-glossary-web/>
 
-收录 **195 条**术语，每条给出统一中文译名、英文原词、别名、一句话释义、机制说明、常见误译与相关术语。
+收录 **195 条**术语，覆盖数学与信息论、机器学习、神经网络、语言模型、训练与对齐、推理与生成、多模态、智能体、安全与评估、系统与算力、前沿与争议共 11 类。
+
+每条按读者深浅写三遍：**一句话释义**（给已知道这个词、只想确认译名的人）、**白话版**（给完全没接触过的人，用日常场景讲明白）、**展开说**（机制、边界与常见误解）。另有统一中文译名、英文原词、别名、不采用写法与相关术语。
 
 ## 页面
 
@@ -90,6 +92,7 @@ ai-glossary-web/
   cat: "inference",               // 见下方分类
   level: "core",                  // basic | core | advanced
   def: "复用历史词元的键与值以避免重复计算。",
+  plain: "好比一边写一边给自己记笔记……",  // 白话版，见下
   long: "补充说明：机制、边界、常见误解。",
   avoid: ["把它当作「模型的记忆」"], // 不采用的写法 / 常见误解
   related: ["qkv", "context-window"], // 只填存在的 id
@@ -97,22 +100,42 @@ ai-glossary-web/
 }
 ```
 
-`pinyin` 也可以连写（`jianzhihuancun`），引擎会自己切音节；`pyFull` 与首字母 `py1` 由引擎在索引时派生，**不要手写 `py1`**。
+### 同一句话的三种深浅
+
+| 字段 | 写给谁 | 作用 |
+|---|---|---|
+| `def` | 已经知道这个词、只想确认译名 | 一句话，准确即可 |
+| `plain` | **完全不懂的新手** | 用日常场景讲明白它到底是什么 |
+| `long` | 想深入的人 | 机制、边界、常见误解 |
+
+`plain` 不是 `long` 的缩写，也不许换一批同义词重写。它有一条硬约束：**只能把 `def` 和 `long` 已经说过的事讲明白，不得新增事实**——类比可以用日常场景，但里面不许出现原文没有的数字、年份、论文名、人名。这条由 `tools/lint-prose.js` 机器检查，并用 `tools/mutate-facts.js` 反向验证过检查确实会触发。写作规范见 `docs/plain-guide.md`。
+
+`pinyin` 也可以连写（`jianzhihuancun`），引擎按「名字里的汉字数 = 音节数」这个约束做定长切分；`pyFull` 与首字母 `py1` 由引擎派生，**不要手写 `py1`**。音节表由 `tools/pinyin-table.js` 从声母×韵母生成，不手写——漏一个音节就会让一批条目的首字母检索静默失效。
 
 分类取值：`math` `ml` `dl` `nlp` `training` `inference` `multimodal` `agent` `safety` `infra` `frontier`。
 
 ## 测试
 
 ```bash
-npm test              # 跑全部（后两项需要本机装有 Chrome 或 Edge）
-npm run test:logic    # 65 项：数据完整性、译名一致性、检索排序、拼音自洽
-npm run test:pages    # 39 项：页面脚本装配、内联脚本语法、引用无悬空
-npm run test:browser  # 41 项：无头 Chrome 实渲染，检查控制台错误与关键内容
+npm test                # 跑全部 240 项（后两项需要本机装有 Chrome 或 Edge）
+npm run test:logic      # 67 项：数据完整性、55 条译名逐条比对、检索排序、拼音不变式
+npm run test:pages      # 44 项：脚本装配、内联语法、plain 全覆盖、权重表与引擎同步
+npm run test:browser    # 41 项：无头 Chrome 实渲染，检查控制台错误与关键内容
 npm run test:responsive # 88 项：CDP 强制 1400/1024/820/560/390px 视口，检查横向溢出
-npm run links         # 列出 related 里指向不存在 id 的引用
+
+npm run lint            # 检查全部 plain 文本（长度、句长、AI 味、是否新增事实）
+npm run lint:strict     # 同上，并把「缺 plain」计为失败
+npm run fields          # 与上一版逐字段比对，确认只新增了 plain
+npm run mutate          # 变异测试：故意注入缺陷，确认上述检查真的会失败
+npm run links           # 列出 related 里指向不存在 id 的引用
 ```
 
 无浏览器环境下 `test:browser` 与 `test:responsive` 会自动跳过并返回 0，逻辑层测试仍会执行。
+
+> **为什么要 `npm run mutate`**：一条从未失败过的测试等于没有测试。本项目的拼音不变式就是这么来的——
+> 旧的「自洽」检查在首字母大面积失效时仍然全绿，因为它两边都由同一个错误切分导出。
+> `mutate-*.js` 会删掉一个音节、注入一个假数字、把权重表与引擎弄脱节，然后要求测试**变红**；
+> 跑完自动还原。每个新加的断言都应当配一个对应的变异，否则不知道它有没有在做事。
 
 > `--window-size` 在 headless Chrome 下会被夹到固定尺寸，截出来的「移动端」其实还是桌面宽度。
 > 所以响应式测试走 DevTools Protocol 的 `Emulation.setDeviceMetricsOverride`，
@@ -120,10 +143,11 @@ npm run links         # 列出 related 里指向不存在 id 的引用
 
 ## 加一条术语的流程
 
-1. 找合适的分片，往 `T.push(...)` 里加条目（新主题可另建 `data-xxx.js`，并在四个页面的 `<script>` 列表里加一行）。
-2. `related` 只填已经存在的 `id`。
-3. `npm run links && npm test`。
-4. 若新增了分类，记得同步 `engine.js` 的 `CATEGORIES`。
+1. 找到对应分类的 `data/data-<分类>.js`，往 `T.push(...)` 里加条目（新分类需同步 `engine.js` 的 `CATEGORIES`，并在四个页面的 `<script>` 列表里加一行）。
+2. 写 `plain` 前先看 `docs/plain-guide.md`，那里有正反例和硬性清单。
+3. `related` 只填已经存在的 `id`。
+4. `npm run links && npm run lint && npm test`。
+5. 多人并行改数据时，`npm run fields` 是主闸：它会揪出任何被误动的受保护字段。
 
 ## 数据来源与边界
 
@@ -134,11 +158,14 @@ npm run links         # 列出 related 里指向不存在 id 的引用
 
 ## 已知局限
 
-- 拼音只覆盖中文名字段，释义里的中文没有拼音化；首字母有天然碰撞（`cy` 同时是「采样」与「词元」）。
+- 拼音只覆盖中文名字段，释义与白话版里的中文没有拼音化；首字母有天然碰撞（`cy` 同时是「采样」与「词元」，`jcs` 同时是「决策树」与「交叉熵」）。
 - 纯线性扫描打分，没有倒排索引；当前条目量下是毫秒级，上千条以后需要换实现。
 - 拼写容错只兜一次编辑距离，且要求查询词不短于 4 个字符。
 - 无中文分词与英文词形还原，复数与动词化形式只靠子串联系。
 - 覆盖面偏语言模型周边，语音、强化学习、传统 ML 只点到为止。
+- 白话版受「不得新增事实」约束，只能把 `def`/`long` 已有的内容讲软，不能引入新例子或新数据；越抽象的条目（惊讶度、KL 散度、InfoNCE）类比与形式定义之间的落差越大，要精确含义仍须读 `long`。
+- 各分类由不同人撰写，白话版的比喻质量不完全齐平；`tools/lint-prose.js` 只能保证长度、句长、无新增事实和模式额度，判断不了类比是否贴切。
+- 比喻域在分类内部仍偏集中（`npm run metaphors` 能列出来），已刻意打散但没做到全局唯一。
 
 ## License
 

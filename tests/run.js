@@ -293,7 +293,64 @@ console.log("  提示: 首字母同名（并列显示）" + homographs.length + 
   ok(r.length && r[0].term.id === p[1], "首字母「" + p[0] + "」→ " + p[1] + "（实得 " + ((r[0] || {}).term || {}).id + "）");
 });
 
-section("辅助 API");ok(AI.esc("<b>&\"x\"</b>").indexOf("&lt;") === 0, "esc() 正确转义 HTML");
+section("拼音不变式：音节数必须等于汉字数");
+/*
+ * 这条检查补上一个真实教训：引擎的音节表曾漏掉 ci / lei / lin / kui，
+ * 且切分用的是「最长匹配优先」，会把 rengong 切成 reng+o+… 而整条失败，
+ * 失败后静默退回整串。退回值仍然「自洽」（py1 由同一个错误结果导出），
+ * 所以上面那套自洽测试全绿，首字母检索却已经大面积失效。
+ * 能抓住它的只有一个外部事实：名字里有几个汉字，就该有几个音节。
+ */
+function isCjkCode(c) { return (c >= 0x3400 && c <= 0x4DBF) || (c >= 0x4E00 && c <= 0x9FFF); }
+function nameChars(s) {
+  var bare = String(s || "").replace(/[（(][^）)]*[)）]/g, "");   /* 括号注解不注音 */
+  var n = 0;
+  for (var i = 0; i < bare.length; i++) { if (isCjkCode(bare.charCodeAt(i))) n++; }
+  return n;
+}
+function mixedName(s) {
+  var bare = String(s || "").replace(/[（(][^）)]*[)）]/g, "");
+  return /[A-Za-z0-9]/.test(bare);      /* 中英混排的名字，拼音只覆盖中文部分 */
+}
+
+var invBad = [], invChecked = 0;
+TERMS.forEach(function (t) {
+  if (!t.pinyin) return;
+  var n = nameChars(t.zh);
+  if (!n || mixedName(t.zh)) return;
+  invChecked++;
+  /* 核心不变式：py1 每个音节贡献一个首字母，所以它的长度必须等于汉字数。
+     切分失败时引擎退回整串，py1 长度会变成 1，正好被这条抓住。 */
+  if (t.py1.length !== n) {
+    invBad.push(t.id + " " + t.zh + "：py1=\"" + t.py1 + "\" 长 " + t.py1.length +
+                " ≠ " + n + " 字（拼音 \"" + t.pinyin + "\" 切分失败？）");
+  }
+  /* 数据里已按空格分好音节的，段数也必须等于汉字数 */
+  if (/\s/.test(t.pinyin)) {
+    var sil = String(t.pinyin).trim().split(/\s+/).filter(Boolean);
+    if (sil.length !== n) {
+      invBad.push(t.id + " " + t.zh + "：" + n + " 个汉字却写了 " + sil.length + " 段 [" + sil.join("-") + "]");
+    }
+  }
+});
+ok(invBad.length === 0, "已校验 " + invChecked + " 条：音节数与首字母长度均等于汉字数");
+if (invBad.length) invBad.slice(0, 12).forEach(function (m) { console.log("      · " + m); });
+
+/* 首字母检索可达性：允许同名首字母并列，但必须排在前列 */
+var unreachable = [];
+TERMS.forEach(function (t) {
+  if (!t.py1 || t.py1.length < 2 || mixedName(t.zh)) return;
+  var r = AI.search(t.py1, { limit: 5 });
+  if (!r.some(function (x) { return x.term.id === t.id; })) {
+    unreachable.push(t.id + "(" + t.py1 + ") → " + ((r[0] || {}).term || {}).id);
+  }
+});
+ok(unreachable.length === 0,
+   "首字母检索可达性：每条都能在自己的首字母结果前 5 名内" +
+   (unreachable.length ? " — 不可达 " + unreachable.join(", ") : ""));
+
+section("辅助 API");
+ok(AI.esc("<b>&\"x\"</b>").indexOf("&lt;") === 0, "esc() 正确转义 HTML");
 var hl = AI.highlight("注意力机制", "注意");
 ok(hl.indexOf("<mark>") >= 0, "highlight() 产生 <mark>：" + hl);
 var sug = AI.suggestFor(AI.get("attention"), 8);

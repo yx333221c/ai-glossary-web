@@ -29,7 +29,7 @@ function load(src, name) {
   return m;
 }
 
-var diffs = 0, added = 0, removedPlain = 0;
+var diffs = 0, added = 0, removedPlain = 0, syntax = 0;
 
 CATS.forEach(function (c) {
   var f = "data-" + c + ".js";
@@ -41,8 +41,20 @@ CATS.forEach(function (c) {
   newSrc = fs.readFileSync(path.join(ROOT, "data", f), "utf8");
 
   var o, n;
-  try { o = load(oldSrc, "old-" + f); } catch (e) { console.log("  !! " + f + " 基准版读不起: " + e.message); diffs++; return; }
-  try { n = load(newSrc, "new-" + f); } catch (e) { console.log("  !! " + f + " 当前版语法错误: " + e.message); diffs++; return; }
+  try { o = load(oldSrc, "old-" + f); } catch (e) {
+    console.log("  !! " + f + " 基准版读不起（不计入字段改动，单独报告）: " + e.message);
+    syntax++;
+    return;
+  }
+  try {
+    n = load(newSrc, "new-" + f);
+  } catch (e) {
+    /* 语法错误要单独归类：多人同时写入时，别人写到一半也会触发这里，
+       混进 diffs 会让人误以为「受保护字段被改」，指错责任文件。 */
+    console.log("  !! " + f + " 当前版语法错误（可能是队友正在写）: " + String(e.message).split("\n")[0]);
+    syntax++;
+    return;
+  }
 
   Object.keys(o).forEach(function (id) {
     var a = o[id], b = n[id];
@@ -66,5 +78,6 @@ CATS.forEach(function (c) {
   });
 });
 
-console.log("\n新增 plain " + added + " 条，受保护字段改动 " + diffs + " 处");
+console.log("\n新增 plain " + added + " 条，受保护字段改动 " + diffs + " 处，读不起的文件 " + syntax + " 个");
+if (syntax) console.log("（语法错误通常是队友正在写该文件，稍后重跑即可；它不计入字段改动）");
 process.exit(diffs ? 1 : 0);

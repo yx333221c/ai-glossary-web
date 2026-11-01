@@ -343,69 +343,119 @@
    * 拼音音节表（无声调，标准普通话音节集）。数据里 pinyin 可以连写
    * （"jianzhihuancun"），引擎负责切音节并据此推出首字母串，避免人工写错 py1。
    */
+  /* 音节表由「声母 × 韵母」生成，不手写：漏一个音节（曾漏 ci、lei、lin、kui）
+     就会让整条拼音切分失败、首字母检索静默退化。tools/pinyin-table.js 负责生成与校验。 */
   var PY_SYLLABLES = [
-    "a","ai","an","ang","ao","e","ei","en","eng","er","o","ou",
-    "yi","ya","ye","yao","you","yan","yin","yang","ying","yong","yu","yue","yuan","yun",
-    "wa","wo","wu","wai","wei","wan","wen","wang","weng",
-    "ba","bo","bi","bu","bai","bei","bao","ban","ben","bang","beng","bian","bin","bing","biao","bie","bang","bo",
-    "pa","po","pi","pu","pai","pei","pao","pen","peng","pian","pin","ping","piao","pie","pou",
-    "ma","mo","mi","mu","mai","mei","mao","man","men","mang","meng","mian","min","ming","miao","mie","mou","miu",
-    "fa","fo","fei","fou","fan","fen","fang","feng","fu",
-    "da","de","di","du","dai","dei","dao","dan","den","dang","deng","dou","dong","dian","ding","diao","die","diu","duan","dui","dun","duo",
-    "ta","te","ti","tu","tai","tao","tan","tang","teng","tou","tong","tian","ting","tiao","tie","tuan","tui","tun","tuo",
-    "na","ne","ni","nu","nao","nan","nen","nang","neng","nou","nong","nian","niang","niao","nie","niu","nuan","nv","nve",
-    "la","le","li","lu","lai","lao","lan","lang","leng","lou","long","lia","lian","liang","liao","lie","liu","luan","lun","luo","lv","lve",
-    "ga","ge","gu","gai","gao","gan","gen","gang","geng","gou","gong","gua","guai","guan","guang","gui","gun","guo",
-    "ka","ke","ki","kou","kan","kang","keng","kai","kao","kuan","kuai","kuang","kun","kuo","kong",
-    "ha","he","hu","hai","hao","han","hen","hang","heng","hei","hou","hong","hua","huai","huan","huang","hui","hun","huo",
-    "ji","jia","jian","jiang","jiao","jie","jin","jing","jiong","jiu","ju","juan","jue","jun",
-    "qi","qia","qian","qiang","qiao","qie","qin","qing","qiong","qiu","qu","quan","que","qun",
-    "xi","xia","xian","xiang","xiao","xie","xin","xing","xiong","xiu","xu","xuan","xue","xun",
-    "zha","zhi","zhu","zhai","zhe","zhei","zhao","zhou","zhan","zhen","zhuan","zhun","zhuang","zhong","zheng","shang","sheng",
-    "sha","shi","shu","shai","shao","shou","shan","shen","shuan","shun","shuang","shua","shuai","shuo","she","shei",
-    "za","zi","zu","zai","zao"," zou","zan","zen","zang","zeng","zong","zuan","zui","zun","zuo","ze","zei",
-    "cha","chi","chu","chai","chao","chou","chan","chen","chan","chang","cheng","chong","chua","chuai","chuan","chuang","chui","chun","chuo","che",
-    "ca","ce","cu","cai","cao","cou","can","cen","cang","ceng","cong","cuan","cui","cun","cuo",
-    "re","ri","ru","rao","rou","ran","ren","rang","reng","rong","ruan","rui","run","ruo",
-    "sa","se","si","su","sai","sao","sou","san","sen","sang","seng","song","suan","sui","sun","suo",
-    "ya","ye","yo"
+    "chuang","shuang","zhuang","chang","cheng","chong","chuai","chuan",
+    "guang","huang","jiang","jiong","kuang","liang","niang","qiang","qiong",
+    "shang","sheng","shong","shuai","shuan","xiang","xiong","zhang","zheng",
+    "zhong","zhuai","zhuan","bang","beng","bian","biao","bing","cang","ceng",
+    "chai","chan","chao","chen","chou","chua","chui","chun","chuo","cong",
+    "cuan","dang","deng","dian","diao","ding","dong","duan","fang","feng",
+    "gang","geng","gong","guai","guan","hang","heng","hong","huai","huan",
+    "jian","jiao","jing","juan","kang","keng","kong","kuai","kuan","lang",
+    "leng","lian","liao","ling","long","luan","mang","meng","mian","miao",
+    "ming","nang","neng","nian","niao","nong","nuan","pang","peng","pian",
+    "piao","ping","qian","qiao","qing","quan","rang","reng","rong","ruan",
+    "sang","seng","shai","shan","shao","shen","shou","shua","shui","shun",
+    "shuo","song","suan","tang","teng","tian","tiao","ting","tong","tuan",
+    "wang","weng","xian","xiao","xing","xuan","yang","ying","yong","yuan",
+    "zang","zeng","zhai","zhan","zhao","zhen","zhou","zhua","zhui","zhun",
+    "zhuo","zong","zuan","ang","bai","ban","bao","bei","ben","bie","bin",
+    "cai","can","cao","cen","cha","che","chi","cho","chu","cou","cui","cun",
+    "cuo","dai","dan","dao","dei","den","die","diu","dou","dui","dun","duo",
+    "eng","fan","fei","fen","ffo","fou","gai","gan","gao","gei","gen","gou",
+    "gua","gui","gun","guo","hai","han","hao","hen","hou","hua","hui","hun",
+    "huo","jia","jie","jin","jiu","jue","jun","kai","kan","kao","kou","kua",
+    "kui","kun","kuo","lai","lan","lao","lei","len","lia","lie","lin","liu",
+    "lou","lue","lun","luo","lve","mai","man","mao","mei","men","mie","min",
+    "miu","mou","nai","nan","nao","nen","nie","niu","nou","nuo","nve","pai",
+    "pao","pei","pen","pie","pin","pou","qia","qie","qin","qiu","que","qun",
+    "ran","rao","ren","rou","rua","rui","run","ruo","sai","san","sao","sen",
+    "sha","she","shi","sho","shu","sou","sui","sun","suo","tai","tan","tao",
+    "tie","tou","tui","tun","tuo","wai","wan","wei","wen","xia","xie","xin",
+    "xiu","xue","xun","yan","yao","yin","you","yue","yun","zai","zan","zao",
+    "zen","zha","zhe","zhi","zho","zhu","zou","zui","zun","zuo","ai","an",
+    "ao","ba","bi","bo","bu","ca","ce","ci","co","cu","da","de","di","du",
+    "ei","en","er","fa","fo","fu","ga","ge","gu","ha","he","hu","ji","ju",
+    "ka","ke","ku","la","le","li","lu","lv","ma","me","mi","mo","mu","na",
+    "ne","ni","nu","nv","ou","pa","pi","po","pu","qi","qu","ra","re","ri",
+    "ro","ru","sa","se","si","so","su","ta","te","ti","tu","wa","wo","wu",
+    "xi","xu","ya","ye","yi","yo","yu","za","ze","zi","zo","zu","a","e","o"
   ];
 
-  var PY_SORTED;
-  (function () {
-    var seen = {}, arr = [];
-    PY_SYLLABLES.forEach(function (s) {
-      s = s.toLowerCase().replace(/[^a-z]/g, "");
-      if (s && !seen[s]) { seen[s] = 1; arr.push(s); }
-    });
-    /* 长音节优先，避免 "xian" 被切成 "xi"+"an" */
-    PY_SORTED = arr.sort(function (a, b) { return b.length - a.length || (a < b ? -1 : 1); });
-  })();
+  var PY_SET = {};
+  (function () { for (var i = 0; i < PY_SYLLABLES.length; i++) PY_SET[PY_SYLLABLES[i]] = 1; })();
 
-  /** 贪心最长匹配切分；切不出来时整体兜底，保证不会把数据弄坏 */
-  function splitPinyin(py) {
+  /**
+   * 把连写拼音切成恰好 want 个音节（记忆化搜索）。
+   * want 来自名字里的汉字数，这是比「最长匹配优先」强得多的约束：
+   * rengong 必须切成 ren+gong，而不是 reng+o+ng……，因为后者凑不出目标段数。
+   * 切不出来返回 null，由调用方退回整串，不会把数据弄坏。
+   */
+  function segmentSyllables(s, want) {
+    var n = s.length;
+    if (!n || !want || want > n) return null;
+    var memo = {};
+    function go(pos, left) {
+      if (pos === n) return left === 0 ? [] : null;
+      if (left === 0) return null;
+      var key = pos * 32 + left;
+      if (memo[key] !== undefined) return memo[key];
+      var best = null;
+      for (var len = Math.min(6, n - pos); len >= 1; len--) {
+        var cand = s.substr(pos, len);
+        if (!PY_SET[cand]) continue;
+        var rest = go(pos + len, left - 1);
+        if (rest) { best = [cand].concat(rest); break; }
+      }
+      memo[key] = best;
+      return best;
+    }
+    return go(0, want);
+  }
+
+  /** 名字里的汉字个数，即拼音应有的音节数 */
+  function cjkCount(s) {
+    return (String(s || "").match(/[\u3400-\u9fff]/g) || []).length;
+  }
+
+  /**
+   * 数据里 pinyin 可以按音节空格分隔，也可以连写。
+   * 连写时按汉字数定长切分；切不动（含外来词、数字、括号注解）就退回整串，
+   * 至少保证按全拼检索还可用。
+   */
+  function splitPinyin(py, zh) {
     var raw = norm(py || "");
     if (!raw) return [];
-    if (/\s/.test(raw)) return raw.split(/\s+/).filter(Boolean);   /* 已按音节写好就照用 */
-    var s = raw, out = [], i = 0, guard = 0;
-    while (i < s.length && guard++ < 80) {
-      var matched = "";
-      for (var k = 0; k < PY_SORTED.length; k++) {
-        var cand = PY_SORTED[k];
-        if (cand.length > matched.length && s.substr(i, cand.length) === cand) matched = cand;
-      }
-      if (!matched) return [s];          /* 含外来词/非拼音，退回整体 */
-      out.push(matched);
-      i += matched.length;
+    if (/\s/.test(raw)) {
+      /* 已分音节：把每一段再按字数拆开（数据里偶有 "xuexi" 挤成一段的情况） */
+      var parts = raw.split(/\s+/).filter(Boolean), flat = [];
+      parts.forEach(function (p) {
+        if (PY_SET[p] || !/^[a-z]+$/.test(p)) { flat.push(p); return; }
+        var sub = segmentSyllables(p, p.length > 1 ? 2 : 1) || segmentSyllables(p, 3) || null;
+        if (sub) flat = flat.concat(sub); else flat.push(p);
+      });
+      return flat;
     }
-    return out;
+    var s = raw.replace(/[^a-z0-9]/g, "");
+    if (!s) return [];
+    if (/[^a-z]/.test(s)) return [s];                 /* 含数字，如 l1l2zhengzehua */
+    var want = cjkCount(zh);
+    var seg = want ? segmentSyllables(s, want) : null;
+    if (seg) return seg;
+    for (var k = 2; k <= 8; k++) {                    /* 字数对不上时再试邻近段数 */
+      seg = segmentSyllables(s, k);
+      if (seg) return seg;
+    }
+    return [s];
   }
 
   /**
    * pyFull / py1 在索引时自动补齐，数据只需写 pinyin。
    */
   function ensureInitials(t) {
-    var sil = splitPinyin(t.pinyin);
+    var sil = splitPinyin(t.pinyin, t.zh);
     t.pyFull = sil.join("");
     t.py1 = sil.map(function (s) { return s.charAt(0); }).join("");
     /* 纯英文名（无拼音）用英文名本身兜底，保证按英文名检索仍然可用 */

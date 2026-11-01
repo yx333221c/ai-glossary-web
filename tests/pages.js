@@ -112,6 +112,41 @@ console.log("\n入口可用性");
 ok(AI.search("注意力").length > 3, "搜索「注意力」返回多条结果");
 ok(AI.groupByCategory().length >= 8, "分类分组有 " + AI.groupByCategory().length + " 组");
 
+console.log("\nabout.html 权重表与引擎同步");
+/*
+ * 那张表的数值是现场读 AI.WEIGHTS 的，但「列哪些行」是一份手写清单。
+ * 引擎加了新权重键而清单没跟上，页面就会静默少几行，看起来仍然自洽。
+ * 所以两个方向都要查。
+ */
+(function weightTableSync() {
+  var about = fs.readFileSync(path.join(ROOT, "about.html"), "utf8");
+  var block = /var ROWS = \[([\s\S]*?)\n    \];/.exec(about);
+  ok(!!block, "about.html 里能找到权重表清单");
+  if (!block) return;
+  var listed = [];
+  var re = /\[\s*"([A-Za-z]+)"\s*,/g, m2;
+  while ((m2 = re.exec(block[1]))) listed.push(m2[1]);
+
+  var declared = Object.keys(AI.WEIGHTS);
+  var notListed = declared.filter(function (k) { return listed.indexOf(k) < 0; });
+  var notDeclared = listed.filter(function (k) { return AI.WEIGHTS[k] === undefined; });
+
+  ok(notListed.length === 0,
+     "引擎的每个权重键都在表里出现（" + declared.length + " 个）" +
+     (notListed.length ? " — 漏: " + notListed.join(", ") : ""));
+  ok(notDeclared.length === 0,
+     "表里没有引擎已不认识的键（" + listed.length + " 行）" +
+     (notDeclared.length ? " — 多余: " + notDeclared.join(", ") : ""));
+})();
+
+console.log("\n白话版覆盖");
+var noPlain = TERMS.filter(function (t) { return !t.plain || !String(t.plain).trim(); });
+ok(noPlain.length === 0,
+   "全部 " + TERMS.length + " 条都有 plain" + (noPlain.length ? " — 缺 " + noPlain.slice(0, 8).map(function (t) { return t.id; }).join(", ") : ""));
+/* plain 参与检索但权重必须最低一档，否则长正文会左右排序 */
+ok(AI.WEIGHTS.plainHas > 0 && AI.WEIGHTS.plainHas < AI.WEIGHTS.longHas,
+   "plain 权重低于 long（" + AI.WEIGHTS.plainHas + " < " + AI.WEIGHTS.longHas + "），不会盖过正文");
+
 console.log("\n" + "=".repeat(52));
 console.log("通过 " + pass + " / " + (pass + fail) + (fail ? "  失败 " + fail : "  全部通过"));
 console.log("=".repeat(52));

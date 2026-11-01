@@ -45,6 +45,10 @@
     iniExact: 58,  iniPrefix: 42,
     defHas: 17,    defCap: 34,
     longHas: 7,    longCap: 21,
+    /* 白话版最长、且满是日常词（题、本子、弹珠），权重必须低于 long，
+       否则「模型」「卷子」这种常见词会把一大堆条目一起捞上来。
+       它的价值在于让人凭残存的画面感找回术语。 */
+    plainHas: 5,   plainCap: 15,
     tagHas: 24,
     catHas: 13,
     levelHas: 8,
@@ -231,6 +235,14 @@
     }
     var longHits = countHits(norm(term.long || ""), word);
     if (longHits) acc.score += Math.min(longHits * W.longHas, W.longCap);
+
+    /* 白话版：让「记得那个像弹珠的说法」也能找回「聚类」。
+       只在名称与 def/long 都没命中时才写进命中原因，避免抢走正文的说明位。 */
+    var plainHits = countHits(norm(term.plain || ""), word);
+    if (plainHits) {
+      acc.score += Math.min(plainHits * W.plainHas, W.plainCap);
+      if (acc.tier === 0 && !defHits && !longHits) acc.reasons.push("白话版命中");
+    }
 
     var tags = term.tags || [];
     for (i = 0; i < tags.length; i++) {

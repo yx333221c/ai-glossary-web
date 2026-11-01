@@ -53,14 +53,15 @@
     <div class="section-hd"><h2>能查到什么：数据字段</h2><span class="hint">一条术语 = 一个对象</span></div>
     <p>
       数据是一组扁平对象，字段不多但各有分工：<code>en</code> 与 <code>zh</code> 是名字，
-      <code>def</code> 与 <code>long</code> 是内容，<code>avoid</code>、<code>aka</code>、<code>related</code> 是关系，
+      <code>def</code>、<code>plain</code>、<code>long</code> 是同一条内容的三种深浅，
+      <code>avoid</code>、<code>aka</code>、<code>related</code> 是关系，
       <code>cat</code>、<code>level</code>、<code>tags</code> 是筛选维度，<code>pinyin</code>、<code>py1</code> 是为检索准备的辅助索引键。
       下表最后一列写明该字段在打分时扮演的角色，方便你判断「为什么搜这个词能搜到它」。
     </p>
     <table class="gloss">
       <thead><tr><th>字段</th><th>含义</th><th>在检索里的角色</th></tr></thead>
       <tbody>
-        <tr><td><code>id</code></td><td>稳定标识符，kebab-case，如 <code>kv-cache</code>、<code>kl-divergence</code>；详情页 URL 与 <code>related</code> 都靠它引用</td><td>完全等于查询词时给高分（<code>idExact</code>）；前缀 / 包含命中走通用分支，并被截到 <code>idHas</code> + 20 以内</td></tr>
+        <tr><td><code>id</code></td><td>稳定标识符，kebab-case，如 <code>kv-cache</code>、<code>kl-divergence</code>；详情页 URL 与 <code>related</code> 都靠它引用</td><td>完全等于查询词给 <code>idExact</code>，前缀给 <code>idPrefix</code>，包含给 <code>idHas</code>；整体低于英文名</td></tr>
         <tr><td><code>en</code></td><td>英文原词，站内统一写法（含斜杠分隔的并列形式，如 <code>query / key / value</code>）</td><td>权重最高的字段之一：精确、前缀、词首、包含四种命中方式</td></tr>
         <tr><td><code>zh</code></td><td><strong>本站统一中文译名</strong>，一个概念只此一个</td><td>与 <code>en</code> 同级：按去空格后的紧凑形式比较</td></tr>
         <tr><td><code>aka</code></td><td>别名、常见缩写、同义写法数组，如 <code>["跳跃连接", "skip connection"]</code></td><td>独立加分项（精确 <code>akaExact</code> &gt; 前缀 &gt; 包含）</td></tr>
@@ -68,8 +69,9 @@
         <tr><td><code>py1</code></td><td>拼音首字母串，如 <code>zyl</code>（注意力）、<code>jzhc</code>（键值缓存）；<strong>索引时由 <code>pinyin</code> 自动派生</strong>，数据里写了也会被覆盖</td><td>与全拼分开计分，两字母以上才参与匹配；派生依赖引擎内置的音节表，音节切不开时整段退化处理</td></tr>
         <tr><td><code>cat</code></td><td>分类键，对应 <code>AI.CATEGORIES</code>（数学与信息论、神经网络与架构……）</td><td>分类名本身也可被搜到（权重很低）</td></tr>
         <tr><td><code>level</code></td><td>难度：<code>basic</code> 入门 / <code>core</code> 核心 / <code>advanced</code> 进阶</td><td>主要用作筛选；<strong>分数相同时</strong>作为次级排序依据（进阶更靠前）</td></tr>
-        <tr><td><code>def</code></td><td>一句话释义</td><td>可被搜到（<code>defHas</code>），这是「搜释义词也能命中」的来源</td></tr>
-        <tr><td><code>long</code></td><td>机制说明与适用边界的长文</td><td>权重比 <code>def</code> 更低，只作兜底</td></tr>
+        <tr><td><code>def</code></td><td>一句话释义，写给已经知道这个词、只想确认译名的人</td><td>可被搜到（<code>defHas</code>），这是「搜释义词也能命中」的来源</td></tr>
+        <tr><td><code>plain</code></td><td><strong>白话版</strong>，写给完全没接触过的人：用日常场景把这个概念讲明白，而不是把长文缩短</td><td>权重最低的一档（<code>plainHas</code>，封顶 <code>plainCap</code>）。它长、又全是日常词，压到 <code>long</code> 之下才不会左右排序；留着是为了让人凭残存的画面感找回术语，比如搜「弹珠」能找到「聚类」</td></tr>
+        <tr><td><code>long</code></td><td>机制说明与适用边界的长文，写给想深入的人</td><td>权重比 <code>def</code> 更低，只作兜底</td></tr>
         <tr><td><code>avoid</code></td><td>不采用译名数组，即本页对照表「不采用」那一列</td><td>不参与检索打分，只在详情页提示</td></tr>
         <tr><td><code>related</code></td><td>相关术语的 <code>id</code> 数组</td><td>间接命中：查询词命中了它指向的条目名时给少量加分（有上限）</td></tr>
         <tr><td><code>tags</code></td><td>标签数组，如 <code>["信息论", "优化"]</code></td><td>弱匹配（<code>tagHas</code>），适合按主题粗筛</td></tr>
@@ -246,9 +248,12 @@
     </p>
     <div class="note warn">
       <strong>关于释义的可靠性。</strong>
-      <code>def</code> 与 <code>long</code> 两个字段是<strong>为本项目重写的</strong>，力求准确、并刻意多写了边界与反面提醒
+      <code>def</code>、<code>plain</code> 与 <code>long</code> 三个字段是<strong>为本项目重写的</strong>，力求准确、并刻意多写了边界与反面提醒
       （例如「困惑度不等于复杂度」「零样本分类不等于从没见过这个概念」），但它<strong>不能替代论文与教材</strong>。
       它是查「这个词该译成什么、大致指什么」的对照工具，不是可引用的定义出处。
+      白话版另有一条硬约束：<strong>只许把 <code>def</code> 和 <code>long</code> 已经说过的事讲明白，不许新增事实</strong>——
+      类比可以用日常场景（一兜弹珠、一间工坊），但里面不得出现原文没有的数字、年份、论文名或人名，
+      这条由 <code>tools/lint-prose.js</code> 机器检查，不靠自觉。
       前沿且存在争议的概念——涌现能力（emergent ability）、对齐（alignment）、pre-LN / post-LN 孰优——本页已明确标出「争议」，
       请把它当成「此处尚无共识」的信号，而不是一个结论。
       本站不给出具体论文页码或引文编号：条目少、更新快，写了反而容易过期或写错。
@@ -368,6 +373,8 @@
       ["relHas", "关联术语命中", "related 指向的条目名里出现了查询词，累加后受 relCap 截断"],
       ["catHas", "分类命中", "分类中文名或分类键包含查询词"],
       ["longHas", "长文释义命中", "long 字段包含查询词，只作兜底"],
+      ["plainHas", "白话版命中", "plain 字段包含查询词；比 long 还低，靠画面感找回术语用"],
+      ["plainCap", "白话版得分上限", "plain 最长，出现多次也只累计到此值"],
       ["levelHas", "难度名命中", "搜「入门」「进阶」这类筛词"],
       ["fuzzy", "近似匹配（拼写容错）", "名称字段全失手、且查询词不短于 4 个字符时，编辑距离 ≤ 1"],
       ["phraseBonus", "整体短语加成", "多个词拼起来正好等于完整条目名时额外加分，并把层级抬到最高"],
